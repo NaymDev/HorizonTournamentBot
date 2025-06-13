@@ -1,6 +1,9 @@
 import hashlib
 from dataclass import field
 
+# Features / Ideas / ToDo
+# Define fields attributes: sensitive, dynamic (can be changed at runtime)
+
 class VelinConfig:
     _file_hash: str = field(init=False, default="")
     _data_hash: str = field(init=False, default="")
