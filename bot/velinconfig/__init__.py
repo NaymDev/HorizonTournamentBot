@@ -1,5 +1,6 @@
 import hashlib
-from dataclass import field
+from dataclasses import field
+import json
 
 # Features / Ideas / ToDo
 # Define fields attributes: sensitive, dynamic (can be changed at runtime)
@@ -14,10 +15,12 @@ class VelinConfig:
     def load_from_file(self, path: str):
         with open(path, 'r') as f:
             content = f.read()
-        dara = json.loads(content)
-        self._data_hash = self.compute_data_hash(content, data)
+        data = json.loads(content)
+        self._data_hash = self.compute_data_hash(data)
         for key, value in data.items():
             setattr(self, key, value)
+        
+        return self
 
     def has_changed(self, path: str) -> bool:
         with open(path, 'r') as f:

@@ -2,19 +2,16 @@ import discord
 from discord.ext import commands
 import os
 from dotenv import load_dotenv
-from .database import init_db, SessionLocal, User
+from db.session import SessionLocal
 
 load_dotenv()
 
-class MyBot(commands.Bot):
+class HorizonBot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
         intents.message_content = True  # Needed for message content access
         super().__init__(command_prefix="!", intents=intents)
         
-        # Initialize DB
-        init_db()
-
         # You can add cogs here if you want
         self.add_cog(Greetings(self))
 
