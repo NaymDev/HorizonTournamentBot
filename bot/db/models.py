@@ -127,4 +127,3 @@ class Substitutions(Base):
     timestamp = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc))
     
     team = relationship("Teams", back_populates="substitutions")
-
