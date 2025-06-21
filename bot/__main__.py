@@ -4,9 +4,12 @@ from bot import HorizonBot
 
 load_dotenv()
 
-import config       # load config
-import db.session   # setup db session
+import config       # load config  # noqa: E402, F401
+import db.session   # setup db session  # noqa: E402, F401
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+if not DISCORD_TOKEN:
+    raise EnvironmentError("Environment variable DISCORD_TOKEN is not set or empty")
 
 bot = HorizonBot()
+bot.run(DISCORD_TOKEN)

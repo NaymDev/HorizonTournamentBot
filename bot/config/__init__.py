@@ -1,12 +1,10 @@
-from velinconfig import VelinConfig
-from dataclasses import dataclass
+from velinconfig import BaseConfig, ConfigField
+    
+class DBConfig(BaseConfig):
+    uri: str = ConfigField(readonly=True)
 
-@dataclass
-class Database:
-    uri: str
+class HorizonBotConfig(BaseConfig):
+    database: DBConfig = ConfigField()
+    version: str = ConfigField(readonly=True)
 
-@dataclass
-class HorizonBotConfig(VelinConfig):
-    database: Database 
-
-CONFIG = HorizonBotConfig(None).load_from_file("./config.json")
+CONFIG: HorizonBotConfig = HorizonBotConfig.from_json("./config.json")

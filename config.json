@@ -1,5 +1,6 @@
 {
     "database": {
-        "uri": "sqlite"
-    }
+        "uri": "sqlite:///main.db"
+    },
+    "version": "b0.1"
 }
