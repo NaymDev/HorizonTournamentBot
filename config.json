@@ -1,6 +1,9 @@
 {
     "database": {
-        "uri": "sqlite:///main.db"
+        "uri": "sqlite+aiosqlite:///main.db"
+    },
+    "signups": {
+        "signup_channe_id": 1234567890
     },
     "version": "b0.1"
 }

@@ -7,14 +7,26 @@ import datetime
 
 Base = declarative_base()
 
+class TournamentStatus(enum.Enum):
+    planned = "planned"
+    signups = "signups"
+    active = "active"
+    finished = "finished"
+    cancelled = "cancelled"
+
 class TeamStatus(enum.Enum):
     pending = "pending"
-    confirmed = "confirmed"
+    accepted = "accepted"
     rejected = "rejected"
 
 class MatchStatus(enum.Enum):
     open = "open"
     finished = "finished"
+
+class MinecraftAccountHistoryChangeType(enum.Enum):
+    linked = "linked"
+    unlinked = "unlinked"
+    updated = "updated"
 
 class Reaction(enum.Enum):
     accept = "accept"
@@ -29,7 +41,9 @@ class Tournaments(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
     start_date = Column(DateTime)
-    status = Column(String)  # e.g. 'planned', 'active', 'finished'
+    status = Column(Enum(TournamentStatus), default=TournamentStatus.planned)
+    
+    signup_channel_id = Column(String, nullable=False)
     
     brackets = relationship("Brackets", back_populates="tournament")
     teams = relationship("Teams", back_populates="tournament")
@@ -58,15 +72,41 @@ class Players(Base):
     discord_user_id = Column(String, unique=True, nullable=False)
     username = Column(String, nullable=False)
     
+    minecraft_account = relationship("MinecraftAccounts", uselist=False, back_populates="player")
+    minecraft_account_history = relationship("MinecraftAccountHistory", back_populates="player", cascade="all, delete-orphan")
+    
     team_memberships = relationship("TeamMembers", back_populates="player")
 
+# Minecraft start
+class MinecraftAccounts(Base):
+    __tablename__ = 'minecraft_accounts'
+    id = Column(Integer, primary_key=True)
+    player_id = Column(Integer, ForeignKey('players.id'), nullable=False, unique=True)
+    minecraft_uuid = Column(String, unique=True, nullable=False)
+    minecraft_username = Column(String, nullable=False)
+    linked_at = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc))
+
+    player = relationship("Players", back_populates="minecraft_account")
+
+class MinecraftAccountHistory(Base):
+    __tablename__ = 'minecraft_account_history'
+    id = Column(Integer, primary_key=True)
+    player_id = Column(Integer, ForeignKey('players.id'), nullable=False)
+    minecraft_uuid = Column(String, nullable=False)
+    minecraft_username = Column(String, nullable=False)
+    change_type = Column(Enum(MinecraftAccountHistoryChangeType), nullable=False)
+    changed_at = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc))
+    note = Column(String, nullable=True)
+
+    player = relationship("Players", back_populates="minecraft_account_history")
+# Minecraft end
 
 class Teams(Base):
     __tablename__ = 'teams'
     id = Column(Integer, primary_key=True)
     tournament_id = Column(Integer, ForeignKey('tournaments.id'), nullable=False)
     team_name = Column(String, nullable=False)
-    signup_time = Column(DateTime, default=datetime.datetime.utcnow)
+    signup_time = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc))
     status = Column(Enum(TeamStatus), default=TeamStatus.pending)
     
     tournament = relationship("Tournaments", back_populates="teams")
@@ -85,9 +125,9 @@ class TeamMembers(Base):
     team_id = Column(Integer, ForeignKey('teams.id'), nullable=False)
     player_id = Column(Integer, ForeignKey('players.id'), nullable=False)
     role = Column(Enum(PlayerRole), default=PlayerRole.member)
-    accepted = Column(Boolean, default=False)
-    responded = Column(Boolean, default=False)
-    response = Column(Enum(Reaction), nullable=True)
+    accepted = Column(Boolean, default=False) # unsused?
+    responded = Column(Boolean, default=False) # unsused?
+    response = Column(Enum(Reaction), nullable=True) # unsused?
     
     team = relationship("Teams", back_populates="members")
     player = relationship("Players", back_populates="team_memberships")
@@ -104,13 +144,14 @@ class PlayerAcceptance(Base):
     player_id = Column(Integer, ForeignKey('players.id'), nullable=False)
     reacting_player_id = Column(Integer, ForeignKey('players.id'), nullable=False)
     reaction = Column(Enum(Reaction), nullable=False)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    timestamp = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc))
 
 
 class Messages(Base):
     __tablename__ = 'messages'
     id = Column(Integer, primary_key=True)
     discord_message_id = Column(String, nullable=False, unique=True)
+    discord_channel_id = Column(String, nullable=False)
     team_id = Column(Integer, ForeignKey('teams.id'), nullable=False)
     purpose = Column(String)  # e.g. 'signup confirmation message'
     
