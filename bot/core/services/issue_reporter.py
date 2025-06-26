@@ -2,7 +2,7 @@ import requests
 import datetime
 import traceback
 import hashlib
-from bot.config import CONFIG
+from config import CONFIG
 
 import time
 import jwt
@@ -28,7 +28,7 @@ def get_github_app_token(app_id: str, installation_id: str, private_key_path: st
     now = int(time.time())
     payload = {
         "iat": now - 60,
-        "exp": now + (10 * 60),
+        "exp": now + 120,
         "iss": app_id
     }
 

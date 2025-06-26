@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
-from bot.db import models
+from db import models
 
 class PlayerRepository:
     def __init__(self, session: AsyncSession):

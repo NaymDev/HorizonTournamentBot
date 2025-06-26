@@ -1,8 +1,8 @@
-from bot.core.repositories.minecraft import MinecraftRepository
-from bot.core.repositories.players import PlayerRepository
-from bot.core.repositories.teams import TeamRepository
-from bot.core.repositories.tournaments import TournamentRepository
-from bot.db import models
+from core.repositories.minecraft import MinecraftRepository
+from core.repositories.players import PlayerRepository
+from core.repositories.teams import TeamRepository
+from core.repositories.tournaments import TournamentRepository
+from db import models
 
 TEAM_NAME_MAX_LENGTH = 20
 

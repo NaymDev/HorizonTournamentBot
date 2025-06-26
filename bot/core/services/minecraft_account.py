@@ -1,5 +1,5 @@
-from bot.core.repositories.minecraft import MinecraftRepository
-from bot.core.repositories.players import PlayerRepository
+from core.repositories.minecraft import MinecraftRepository
+from core.repositories.players import PlayerRepository
 
 class AccountLinkError(Exception):
     def __init__(self, message, code=None):

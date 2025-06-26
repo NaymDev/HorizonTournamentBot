@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from bot.db import models
+from db import models
 
 class TeamRepository:
     def __init__(self, session: AsyncSession):

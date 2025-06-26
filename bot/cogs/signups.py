@@ -4,13 +4,13 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-from bot.config import CONFIG
-from bot.core.repositories.messages import MessageRepository
-from bot.core.repositories.teams import TeamRepository
-from bot.core.repositories.tournaments import TournamentRepository
-from bot.core.services.signups import DuplicateTeamMemberError, SignupClosed, SignupError, SignupService, TeamNameTaken, TeamNameTooLong, TournamentNotFound
-from bot.core.services.teamreactions import TeamReactionService
-from bot.db.session import SessionLocal
+from config import CONFIG
+from core.repositories.messages import MessageRepository
+from core.repositories.teams import TeamRepository
+from core.repositories.tournaments import TournamentRepository
+from core.services.signups import DuplicateTeamMemberError, SignupClosed, SignupError, SignupService, TeamNameTaken, TeamNameTooLong, TournamentNotFound
+from core.services.teamreactions import TeamReactionService
+from db.session import SessionLocal
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

@@ -3,10 +3,10 @@
         "uri": "sqlite+aiosqlite:///main.db"
     },
     "signups": {
-        "signup_channe_id": 1234567890
+        "signup_channel_id": 1234567890
     },
     "issues": {
-        "github_repository": "https://github.com/NaymDev/HorizonTournamentBot",
+        "github_repository": "NaymDev/HorizonTournamentBot",
         "github_labels": ["bug"]
     },
     "version": "b0.1"

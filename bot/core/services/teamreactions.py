@@ -1,8 +1,8 @@
 import discord
 
-from bot.core.repositories.messages import MessageRepository
-from bot.core.repositories.teams import TeamRepository
-from bot.db import models
+from core.repositories.messages import MessageRepository
+from core.repositories.teams import TeamRepository
+from db import models
 
 class TeamReactionService:
     def __init__(self, team_repo: TeamRepository, msg_repo: MessageRepository, member_repo):

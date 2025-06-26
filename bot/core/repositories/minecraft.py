@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from bot.db import models
+from db import models
 
 class MinecraftRepository:
     def __init__(self, session):

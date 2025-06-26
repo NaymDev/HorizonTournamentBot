@@ -3,8 +3,8 @@ from logging.handlers import RotatingFileHandler
 import discord
 from discord.ext import commands
 
-from bot.config import CONFIG
-from bot.core.services.issue_reporter import report_unhandled_exception
+from config import CONFIG
+from core.services.issue_reporter import report_unhandled_exception
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
