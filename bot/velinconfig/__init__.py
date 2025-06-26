@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Any, Dict, Type, Optional, Callable, get_type_hints
+from typing import Any, Dict, Type, Optional, Callable, get_args, get_origin
 
 class ConfigField:
     def __init__(self, *, sensitive=False, env_var=None, readonly=False):
@@ -43,16 +43,15 @@ class BaseConfig(metaclass=ConfigMeta):
                 setattr(self, key, val)
 
     def _convert_type(self, val: str, typ: Type) -> Any:
-        if typ == int:
+        if typ is int:
             return int(val)
-        elif typ == float:
+        elif typ is float:
             return float(val)
-        elif typ == bool:
+        elif typ is bool:
             return val.lower() in ("true", "1", "yes")
-        elif typ == str:
+        elif typ is str:
             return val
         elif issubclass(typ, BaseConfig):
-            # For nested config from env not supported in this version
             return None
         else:
             return val
@@ -60,9 +59,25 @@ class BaseConfig(metaclass=ConfigMeta):
     def _check_type(self, val, typ):
         if val is None:
             return True
+
         if issubclass(type(val), BaseConfig):
             return isinstance(val, typ)
-        # simple isinstance check for builtin types
+
+        origin = get_origin(typ)
+        if origin is not None:
+            if not isinstance(val, origin):
+                return False
+            args = get_args(typ)
+            if not args:
+                return True
+            
+            if origin in (list, tuple, set):
+                return all(self._check_type(item, args[0]) for item in val)
+            if origin is dict:
+                key_type, value_type = args
+                return all(self._check_type(k, key_type) and self._check_type(v, value_type) for k, v in val.items())
+            return True 
+
         return isinstance(val, typ)
 
     @classmethod

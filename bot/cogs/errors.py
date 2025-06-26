@@ -3,6 +3,7 @@ from logging.handlers import RotatingFileHandler
 import discord
 from discord.ext import commands
 
+from bot.config import CONFIG
 from bot.core.services.issue_reporter import report_unhandled_exception
 
 logger = logging.getLogger(__name__)
@@ -26,3 +27,23 @@ class ErrorHandler(commands.Cog):
         import traceback
         error_text = traceback.format_exc()
         await report_unhandled_exception(ctx=None, error=error_text, source=event_method)
+
+async def setup(bot):
+    if CONFIG.issues.github_repository is None:
+        logger.warning("GitHub repository not configured, error reporting will be disabled.")
+    elif CONFIG.issues.github_private_key_path is None:
+        logger.warning("GitHub private key path not configured, error reporting will be disabled.")
+    elif CONFIG.issues.github_app_id is None:
+        logger.warning("GitHub App ID not configured, error reporting will be disabled.")
+    elif CONFIG.issues.github_installation_id is None:
+        logger.warning("GitHub Installation ID not configured, error reporting will be disabled.")
+    else:
+        await bot.add_cog(ErrorHandler(bot))
+        import asyncio
+
+        async def handle_async_exception(loop, context):
+            msg = context.get("exception", context["message"])
+            await report_unhandled_exception(error=msg, source="asyncio loop exception")
+            
+        loop = asyncio.get_event_loop()
+        loop.set_exception_handler(handle_async_exception)

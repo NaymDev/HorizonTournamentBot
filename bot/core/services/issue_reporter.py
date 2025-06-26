@@ -4,6 +4,50 @@ import traceback
 import hashlib
 from bot.config import CONFIG
 
+import time
+import jwt
+from cryptography.hazmat.primitives import serialization
+
+def get_github_app_token(app_id: str, installation_id: str, private_key_path: str) -> str:
+    """
+    Generate a GitHub App Installation Access Token.
+
+    :param app_id: GitHub App ID (as string or int)
+    :param installation_id: Installation ID for the app on a specific repo/org
+    :param private_key_path: Path to the .pem file downloaded from GitHub
+    :return: Installation access token (string)
+    :raises: RuntimeError if the token cannot be fetched
+    """
+
+    with open(private_key_path, "rb") as f:
+        private_key = serialization.load_pem_private_key(
+            f.read(),
+            password=None
+        )
+
+    now = int(time.time())
+    payload = {
+        "iat": now - 60,
+        "exp": now + (10 * 60),
+        "iss": app_id
+    }
+
+    jwt_token = jwt.encode(payload, private_key, algorithm="RS256")
+
+    headers = {
+        "Authorization": f"Bearer {jwt_token}",
+        "Accept": "application/vnd.github+json"
+    }
+
+    url = f"https://api.github.com/app/installations/{installation_id}/access_tokens"
+    response = requests.post(url, headers=headers)
+
+    if response.status_code != 201:
+        raise RuntimeError(f"Failed to get access token: {response.status_code} {response.text}")
+
+    return response.json()["token"]
+
+
 _recent_errors = set()
 
 
@@ -70,7 +114,11 @@ def format_exception(ctx=None, interaction=None, error=None, source="unknown"):
 def create_github_issue(title, body):
     url = f"https://api.github.com/repos/{CONFIG.issues.github_repository}/issues"
     headers = {
-        "Authorization": f"token {CONFIG.issues.github_token}",
+        "Authorization": f"token {get_github_app_token(
+            CONFIG.issues.github_app_id,
+            CONFIG.issues.github_installation_id,
+            CONFIG.issues.github_private_key_path
+        )}",
         "Accept": "application/vnd.github+json",
     }
     payload = {"title": title, "body": body, "labels": CONFIG.issues.github_labels}

@@ -7,9 +7,12 @@ class SignupConfig(BaseConfig):
     signup_channel_id: int = ConfigField()
 
 class GithubIssuesConfig(BaseConfig):
-    github_token: str = ConfigField(sensitive=True, readonly=True, env_var=True)
     github_repository: str = ConfigField(readonly=True)
     github_labels: list[str] = ConfigField(readonly=True)
+    
+    github_app_id: str = ConfigField(sensitive=True, env_var="GITHUB_APP_ID", readonly=True)
+    github_installation_id: str = ConfigField(sensitive=True, env_var="GITHUB_INSTALLATION_ID", readonly=True)
+    github_private_key_path: str = ConfigField(sensitive=True, env_var="GITHUB_PRIVATE_KEY_PATH", readonly=True)
 
 class HorizonBotConfig(BaseConfig):
     database: DBConfig = ConfigField()
