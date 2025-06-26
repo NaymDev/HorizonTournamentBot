@@ -36,7 +36,7 @@ class SignupCog(commands.Cog):
             message_repo = MessageRepository(session)
             service = TeamReactionService(team_repo, message_repo, None)
             
-            signup_messages = message_repo.get_all_signup_messages()
+            signup_messages = await message_repo.get_all_signup_messages()
             for msg in signup_messages:
                 channel = self.bot.get_channel(msg.discord_channel_id)
                 discord_message = await channel.fetch_message(int(msg.discord_message_id))
