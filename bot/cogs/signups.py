@@ -1,4 +1,5 @@
 import logging
+from logging.handlers import RotatingFileHandler
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -7,11 +8,16 @@ from bot.config import CONFIG
 from bot.core.repositories.messages import MessageRepository
 from bot.core.repositories.teams import TeamRepository
 from bot.core.repositories.tournaments import TournamentRepository
-from bot.core.services.signups import DuplicateTeamMemberError, SignupClosed, SignupService, TeamNameTaken, TeamNameTooLong, TournamentNotFound
+from bot.core.services.signups import DuplicateTeamMemberError, SignupClosed, SignupError, SignupService, TeamNameTaken, TeamNameTooLong, TournamentNotFound
 from bot.core.services.teamreactions import TeamReactionService
 from bot.db.session import SessionLocal
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+handler = RotatingFileHandler('cogs.signups.log', maxBytes=1000000, backupCount=3)
+formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 class SignupCog(commands.Cog):
     def __init__(self, bot, session_factory):
@@ -83,6 +89,11 @@ class SignupCog(commands.Cog):
                 await interaction.followup.send(f"⚠️ Team name '{e.team.team_name}' is already taken. Please choose a different name.", ephemeral=True)    
             except DuplicateTeamMemberError:
                 await interaction.followup.send("⚠️ A team cannot have duplicate members. Please ensure all members are unique.", ephemeral=True)
+            except SignupError as e:
+                await interaction.followup.send(f"⚠️ Signup failed: {str(e)}", ephemeral=True)
+            except Exception as e:
+                await interaction.followup.send("⚠️ An unexpected error occurred. If this keeps happening please open a ticket!", ephemeral=True)
+                raise e
             
 
 async def setup(bot):

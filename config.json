@@ -5,5 +5,9 @@
     "signups": {
         "signup_channe_id": 1234567890
     },
+    "issues": {
+        "github_repository": "",
+        "github_labels": []
+    },
     "version": "b0.1"
 }
