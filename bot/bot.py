@@ -2,8 +2,6 @@ from pathlib import Path
 import discord
 from discord.ext import commands
 
-from core.services.issue_reporter import report_unhandled_exception
-
 class HorizonBot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
