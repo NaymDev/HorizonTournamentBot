@@ -28,7 +28,7 @@ class TeamReactionService:
         await self._ensure_reaction_presence(discord_message)
         
         tournament = await self.tournament_repo.get_tournament_for_signup_channel_id(discord_message.channel.id)
-        if not tournament or tournament.status != models.TournamentStatus.signups:
+        if not tournament or tournament.status != models.TournamentStatus.signups or tournament.signups_locked_reason:
             return
         await self._update_team_status(team_id, reactions, member_ids)
 

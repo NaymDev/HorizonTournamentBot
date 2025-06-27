@@ -45,6 +45,8 @@ class Tournaments(Base):
     
     signup_channel_id = Column(String, nullable=False, unique=True)
     
+    signups_locked_reason = Column(String, nullable=True)
+    
     brackets = relationship("Brackets", back_populates="tournament")
     teams = relationship("Teams", back_populates="tournament")
 
