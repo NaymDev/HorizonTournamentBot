@@ -43,7 +43,7 @@ class Tournaments(Base):
     start_date = Column(DateTime)
     status = Column(Enum(TournamentStatus), default=TournamentStatus.planned)
     
-    signup_channel_id = Column(String, nullable=False)
+    signup_channel_id = Column(String, nullable=False, unique=True)
     
     brackets = relationship("Brackets", back_populates="tournament")
     teams = relationship("Teams", back_populates="tournament")

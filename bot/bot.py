@@ -10,17 +10,7 @@ class HorizonBot(commands.Bot):
 
     async def on_ready(self):
         print(f"Logged in as {self.user} (ID: {self.user.id})")
-        
-        
         print("------")
-        for guild in self.guilds:
-            for cmd in await self.tree.sync():
-                print(
-                    f"Synced command {cmd.name} for guild {guild.name} ({guild.id})"
-                )
-            print(f"Synced commands for guild {guild.name} ({guild.id})")
-        print("------")
-        
     
     async def setup_hook(self):
         folder = Path(__file__).resolve().parent / "cogs"

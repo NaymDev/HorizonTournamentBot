@@ -1,21 +1,23 @@
 import discord
 
+from bot.core.repositories.tournaments import TournamentRepository
 from core.repositories.messages import MessageRepository
 from core.repositories.teams import TeamRepository
 from db import models
 
 class TeamReactionService:
-    def __init__(self, team_repo: TeamRepository, msg_repo: MessageRepository, member_repo):
+    def __init__(self, team_repo: TeamRepository, msg_repo: MessageRepository, member_repo, tournament_repo: TournamentRepository):
         self.team_repo: TeamRepository = team_repo
         self.msg_repo: MessageRepository = msg_repo
         self.member_repo = member_repo
+        self.tournament_repo: TournamentRepository = tournament_repo
 
     async def handle_signup_reaction_check(self, discord_message):
-        msg_model = self.msg_repo.get_by_discord_message_id(discord_message.id)
+        msg_model: models.Messages = self.msg_repo.get_by_discord_message_id(discord_message.id)
         team_id = msg_model.team_id
         
         team = await self.team_repo.get_team_for_team_id(team_id)
-        if team.status != models.TeamStatus.pending:
+        if not team or team.status != models.TeamStatus.pending:
             return
         
         member_ids = self.member_repo.get_member_ids(team_id)
@@ -24,6 +26,10 @@ class TeamReactionService:
 
         reactions = await self._collect_reactions(discord_message)
         await self._ensure_reaction_presence(discord_message)
+        
+        tournament = await self.tournament_repo.get_tournament_for_signup_channel_id(discord_message.channel.id)
+        if not tournament or tournament.status != models.TournamentStatus.signups:
+            return
         await self._update_team_status(team_id, reactions, member_ids)
 
     async def _clean_invalid_reactions(self, message, member_ids):
