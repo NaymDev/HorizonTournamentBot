@@ -14,6 +14,9 @@ class TeamReactionService:
 
     async def handle_signup_reaction_check(self, discord_message):
         msg_model: models.Messages = self.msg_repo.get_by_discord_message_id(discord_message.id)
+        if not msg_model:
+            return
+        
         team_id = msg_model.team_id
         
         team = await self.team_repo.get_team_for_team_id(team_id)
@@ -30,7 +33,10 @@ class TeamReactionService:
         tournament = await self.tournament_repo.get_tournament_for_signup_channel_id(discord_message.channel.id)
         if not tournament or tournament.status != models.TournamentStatus.signups or tournament.signups_locked_reason:
             return
-        await self._update_team_status(team_id, reactions, member_ids)
+        
+        match await self._update_team_status(team_id, reactions, member_ids):
+            case models.TeamStatus.accepted:
+                await self._handle_team_approved(discord_message, team.team_name, member_ids)
 
     async def _clean_invalid_reactions(self, message, member_ids):
         for reaction in message.reactions:
@@ -71,13 +77,26 @@ class TeamReactionService:
             else:
                 await message.add_reaction(emoji)
 
-    async def _update_team_status(self, team_id, reactions, member_ids):
+    async def _update_team_status(self, team_id, reactions, member_ids) -> models.TeamStatus:
         accepted = all(uid in reactions.get("✅", []) for uid in member_ids)
         denied = any(uid in reactions.get("❌", []) for uid in member_ids)
 
+        
         if denied:
-            await self.team_repo.set_status(team_id, models.TeamStatus.denied)
+            status = models.TeamStatus.denied
         elif accepted:
-            await self.team_repo.set_status(team_id, models.TeamStatus.accepted)
+            status = models.TeamStatus.accepted
         else:
-            await self.team_repo.set_status(team_id, models.TeamStatus.pending)
+            status = models.TeamStatus.pending
+        
+        await self.team_repo.set_status(team_id, status)
+        return status
+    
+    async def _handle_team_approved(self, message: discord.Message, team_name: str, members_discord_ids: list[str]):
+        message.edit(embed=
+                     discord.Embed(
+                         title= team_name,
+                         description="\n".join([f"<:pr_enter:1370057653606154260> <@{user_id}>" for user_id in members_discord_ids]),
+                         footer="Team Approved",
+                     )
+                    )

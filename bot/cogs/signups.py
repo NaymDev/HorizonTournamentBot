@@ -99,7 +99,36 @@ class SignupCog(commands.Cog):
             except Exception as e:
                 await interaction.followup.send("⚠️ An unexpected error occurred. If this keeps happening please open a ticket!", ephemeral=True)
                 raise e
+    
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
+        await self.on_raw_reaction_action(payload)
+        
+    @commands.Cog.listener()
+    async def on_raw_reaction_remove(self, payload: discord.RawReactionActionEvent):
+        await self.on_raw_reaction_action(payload)
+    
+    async def on_raw_reaction_action(self, payload: discord.RawReactionActionEvent):
+        if payload.user_id == self.bot.user.id:
+            return
+        
+        async with self.session_factory() as session:
+            tournament_repo = TournamentRepository(session)
+            if not await tournament_repo.get_tournament_for_signup_channel_id(payload.channel_id):
+                return
             
+            channel = self.bot.get_channel(payload.channel_id) or await self.bot.fetch_channel(payload.channel_id)
+            message = channel.get_partial_message(payload.message_id) or await channel.fetch_message(payload.message_id)
+            
+            team_repo = TeamRepository(session)
+            message_repo = MessageRepository(session)
+            
+            
+            service = TeamReactionService(team_repo, message_repo, None, tournament_repo)
+            
+            service.handle_signup_reaction_check(message)
+        
+        
 
 async def setup(bot):
     if CONFIG.signups.signup_channel_id is None:
