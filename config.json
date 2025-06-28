@@ -24,5 +24,8 @@
             "✨ Hey {user}, you're in! Let’s make this tournament unforgettable!"
         ]
     },
+    "hypixel": {
+        "placeholder":"placeholder"
+    },
     "version": "b0.1"
 }

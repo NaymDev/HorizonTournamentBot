@@ -28,7 +28,10 @@ class MinecraftAccountService:
         if not player:
             raise PlayerNotFound("Player not found for the provided Discord user ID")
         
-        discord_tag = await fetch_hypixel_discord_tag(CONFIG.hypixel.api_key, uuid)
+        try:
+            discord_tag = await fetch_hypixel_discord_tag(CONFIG.hypixel.api_key, uuid)
+        except Exception as e:
+            raise AccountLinkError(f"Failed to fetch Discord tag from Hypixel: {str(e)}")
         if not discord_tag:
             raise NoDiscordTagOnHypixel()
         if discord_tag != discord_member.id and discord_tag != discord_member.name:

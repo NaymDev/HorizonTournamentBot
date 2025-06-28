@@ -1,3 +1,5 @@
+import logging
+from logging.handlers import RotatingFileHandler
 import random
 import discord
 from discord.ext import commands
@@ -7,8 +9,15 @@ from mojang import fetch_minecraft_uuid
 from db.session import SessionLocal
 from config import CONFIG
 from core.repositories.players import PlayerRepository
-from core.services.minecraft_account import DiscordTagMissmatch, MinecraftAccountService, NoDiscordTagOnHypixel, PlayerNotFound
+from core.services.minecraft_account import AccountLinkError, DiscordTagMissmatch, MinecraftAccountService, NoDiscordTagOnHypixel, PlayerNotFound
 from core.repositories.minecraft import MinecraftRepository
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+handler = RotatingFileHandler('cogs.register.log', maxBytes=1000000, backupCount=3)
+formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 class RegisterCog(commands.Cog):
     def __init__(self, bot: commands.Bot, session_factory):
@@ -67,7 +76,11 @@ class RegisterCog(commands.Cog):
                 await interaction.followup.send("🤔 Hmm. I can't find your Discord tag on Hypixel. Please ensure you have linked your Discord account on Hypixel.", ephemeral=True)
             except DiscordTagMissmatch:
                 await interaction.followup.send("🤔 Hmm. The Discord tag from Hypixel does not match your Discord ID. Please ensure you have linked your Discord account on Hypixel correctly.", ephemeral=True)
+            except AccountLinkError as e:
+                logger.error(f"Error linking account for {interaction.user.name} ({interaction.user.id}): {str(e)}")
+                await interaction.followup.send("❌ An error occurred while trying to register your account. If this keeps happening please contact our staff team.", ephemeral=True)
             except Exception as e:
+                await interaction.followup.send("❌ An unexpected error occurred while trying to register your account. Please try again later.", ephemeral=True)
                 raise e
 
 async def setup(bot: commands.Bot):
