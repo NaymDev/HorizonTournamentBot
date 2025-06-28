@@ -1,3 +1,4 @@
+from code import interact
 import logging
 from logging.handlers import RotatingFileHandler
 import discord
@@ -17,11 +18,20 @@ logger.addHandler(handler)
 class ErrorHandler(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        
+        bot.tree.error(coro = self.__dispatch_to_app_command_handler)
+    
+    async def __dispatch_to_app_command_handler(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+        self.bot.dispatch("app_command_error", interaction, error)
 
-    @commands.Cog.listener()
-    async def on_app_command_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
-        logger.info(f"Slash command error in {interaction.command.name}: {error}")
-        await report_unhandled_exception(interaction=interaction, error=error, source="slash_command")
+    @commands.Cog.listener("on_command_error")
+    async def on_command_error(self, ctx: commands.Context, error: commands.CommandError) -> None:
+        if ctx.interaction:
+            logger.info(f"Slash command error in {ctx.interaction.command.name}: {error}")
+            await report_unhandled_exception(interaction=ctx.interaction, error=error, source="slash_command")
+        else:
+            logger.info(f"Command error in {ctx.message.content}: {error}")
+            await report_unhandled_exception(interaction=None, error=error, source="command")
 
 
     @commands.Cog.listener()
