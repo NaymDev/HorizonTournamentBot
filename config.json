@@ -9,5 +9,20 @@
         "github_repository": "NaymDev/HorizonTournamentBot",
         "github_labels": ["bug"]
     },
+    "register": {
+        "hello_channel_id": 1388543103358734396,
+        "hello_messages": [
+            "👋 Welcome to Horizon, {user}! Your journey begins here.",
+            "🌄 A new challenger approaches... Welcome to Horizon, {user}!",
+            "🏹 Gear up, {user}! You're now registered for epic Horizon battles!",
+            "🧱 Block by block, your legacy starts now, {user}. Welcome to Horizon!",
+            "⚔️ {user}, you’ve entered the arena. Let the Horizon games begin!",
+            "⛏️ {user} just joined the tournament grind. Good luck and have fun!",
+            "🎮 {user}, welcome to Horizon — the ultimate Minecraft showdown!",
+            "🔥 {user} is now part of Horizon! Get ready for some serious PvP!",
+            "🚀 Horizon welcomes you, {user}! Let’s craft some legends together.",
+            "✨ Hey {user}, you're in! Let’s make this tournament unforgettable!"
+        ]
+    },
     "version": "b0.1"
 }

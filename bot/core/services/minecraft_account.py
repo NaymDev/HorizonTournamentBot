@@ -25,4 +25,5 @@ class MinecraftAccountService:
         else:
             await self.minecraft_repo.create_account(player.id, uuid, username)
 
-        self.minecraft_repo.log_history(player.id, uuid, username, change_type="linked")
+        await self.minecraft_repo.log_history(player.id, uuid, username, change_type="linked")
+        return True

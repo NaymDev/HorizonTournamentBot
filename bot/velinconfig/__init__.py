@@ -82,7 +82,7 @@ class BaseConfig(metaclass=ConfigMeta):
 
     @classmethod
     def from_json(cls, filepath: str) -> 'BaseConfig':
-        with open(filepath, 'r') as f:
+        with open(filepath, 'r', encoding="utf-8") as f:
             data = json.load(f)
         return cls._from_dict(data)
 

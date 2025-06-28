@@ -16,3 +16,15 @@ class PlayerRepository:
             return result.scalars().first()
         except SQLAlchemyError:
             return None
+    
+    async def create_player(self, discord_user_id: str, username: str) -> models.Players | None:
+        """Create a new player."""
+        new_player = models.Players(discord_user_id=discord_user_id, username=username)
+        try:
+            self.session.add(new_player)
+            await self.session.commit()
+            await self.session.refresh(new_player)
+            return new_player
+        except SQLAlchemyError:
+            await self.session.rollback()
+            return None

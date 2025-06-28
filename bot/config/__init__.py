@@ -14,10 +14,15 @@ class GithubIssuesConfig(BaseConfig):
     github_installation_id: str = ConfigField(sensitive=True, env_var="GITHUB_INSTALLATION_ID", readonly=True)
     github_private_key_path: str = ConfigField(sensitive=True, env_var="GITHUB_PRIVATE_KEY_PATH", readonly=True)
 
+class RegisterConfig(BaseConfig):
+    hello_channel_id: int = ConfigField()
+    hello_messages: list[str] = ConfigField()
+
 class HorizonBotConfig(BaseConfig):
     database: DBConfig = ConfigField()
     signups: SignupConfig = ConfigField()
     issues: GithubIssuesConfig = ConfigField()
+    register: RegisterConfig = ConfigField()
     version: str = ConfigField(readonly=True)
 
 CONFIG: HorizonBotConfig = HorizonBotConfig.from_json("./config.json")
