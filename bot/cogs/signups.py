@@ -10,7 +10,7 @@ from config import CONFIG
 from core.repositories.messages import MessageRepository
 from core.repositories.teams import TeamRepository
 from core.repositories.tournaments import TournamentRepository
-from core.services.signups import DuplicateTeamMemberError, SignupClosed, SignupError, SignupService, TeamNameTaken, TeamNameTooLong, TournamentNotFound
+from core.services.signups import DuplicateTeamMemberError, SignupClosed, SignupError, SignupService, TeamNameTaken, TeamNameTooLong, TournamentNotFound, UnregisteredPlayersError
 from core.services.teamreactions import TeamReactionService
 from db.session import SessionLocal
 
@@ -94,11 +94,27 @@ class SignupCog(commands.Cog):
                 await interaction.followup.send(f"⚠️ Team name '{e.team.team_name}' is already taken. Please choose a different name.", ephemeral=True)    
             except DuplicateTeamMemberError:
                 await interaction.followup.send("⚠️ A team cannot have duplicate members. Please ensure all members are unique.", ephemeral=True)
+            except UnregisteredPlayersError as e:
+                await interaction.followup.send(embed=self._create_unregistered_players_embed(e), ephemeral=True)
             except SignupError as e:
                 await interaction.followup.send(f"⚠️ Signup failed: {str(e)}", ephemeral=True)
             except Exception as e:
                 await interaction.followup.send("⚠️ An unexpected error occurred. If this keeps happening please open a ticket!", ephemeral=True)
                 raise e
+    
+    def _create_unregistered_players_embed(self, error: UnregisteredPlayersError) -> discord.Embed:
+        embed = discord.Embed(
+            title="Unregistered Players",
+            description="Some players don't have a linked Minecraft account.",
+            color=discord.Color.red()
+        )
+        embed.add_field(
+            name="Unregistered Players",
+            value = ", ".join(f"<@{id}>" for id in error.unregistered_ids),
+            inline=False
+        )
+        embed.set_footer(text="Please make sure all players are registered before signing up.")
+        return embed
     
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):

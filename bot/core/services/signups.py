@@ -1,3 +1,4 @@
+from atexit import unregister
 from core.repositories.minecraft import MinecraftRepository
 from core.repositories.players import PlayerRepository
 from core.repositories.teams import TeamRepository
@@ -30,6 +31,11 @@ class TeamNameTaken(SignupError):
 class DuplicateTeamMemberError(SignupError):
     pass
 
+class UnregisteredPlayersError(SignupError):
+    def __init__(self, unregistered_ids: list[int]):
+        super().__init__(f"Some players are not registered: {', '.join(map(str, unregistered_ids))}")
+        self.unregistered_ids = unregistered_ids
+
 class SignupService:
     def __init__(self, tournament_repo: TournamentRepository, team_repo: TeamRepository, player_repo: PlayerRepository, minecraft_repo: MinecraftRepository):
         self.tournament_repo: TournamentRepository = tournament_repo
@@ -56,9 +62,15 @@ class SignupService:
         if len({m.id for m in members}) < len(members):
             raise DuplicateTeamMemberError("A team cannot have duplicate members")
         
+        unregistered_ids = []
         for member in members:
             player = await self.player_repo.get_by_discord_id(member.id)
             if player is None:
-                raise SignupError(f"Member {member.name} is not a registered player") # TODO: imrpove!
+                unregistered_ids.append(member.id)
+                continue
             if await self.minecraft_repo.get_by_player_id(player.id) is None:
-                raise SignupError(f"Member {member.name} does not have a linked Minecraft account") # TODO: imrpove!
+                unregistered_ids.append(member.id)
+                continue
+        
+        if len(unregistered_ids) > 0:
+            raise UnregisteredPlayersError(unregistered_ids)
