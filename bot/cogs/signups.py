@@ -4,6 +4,8 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
+from core.repositories.minecraft import MinecraftRepository
+from core.repositories.players import PlayerRepository
 from config import CONFIG
 from core.repositories.messages import MessageRepository
 from core.repositories.teams import TeamRepository
@@ -34,7 +36,8 @@ class SignupCog(commands.Cog):
         async with self.session_factory() as session:
             team_repo = TeamRepository(session)
             message_repo = MessageRepository(session)
-            service = TeamReactionService(team_repo, message_repo, None)
+            tournament_repo = TournamentRepository(session)
+            service = TeamReactionService(team_repo, message_repo, None, tournament_repo)
             
             signup_messages = await message_repo.get_all_signup_messages()
             for msg in signup_messages:
@@ -70,11 +73,13 @@ class SignupCog(commands.Cog):
         async with self.session_factory() as session:
             tournament_repo = TournamentRepository(session)
             team_repo = TeamRepository(session)
+            player_repo = PlayerRepository(session)
+            minecraft_repo = MinecraftRepository(session)
             
-            service = SignupService(tournament_repo, team_repo)
+            service = SignupService(tournament_repo, team_repo, player_repo, minecraft_repo)
             
             try:
-                service.signup_team(    
+                await service.signup_team(    
                     channel_id=str(interaction.channel_id),
                     team_name=team_name,
                     members=[p1, p2, p3, interaction.user]

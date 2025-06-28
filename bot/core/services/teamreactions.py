@@ -1,6 +1,6 @@
 import discord
 
-from bot.core.repositories.tournaments import TournamentRepository
+from core.repositories.tournaments import TournamentRepository
 from core.repositories.messages import MessageRepository
 from core.repositories.teams import TeamRepository
 from db import models

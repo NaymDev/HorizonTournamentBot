@@ -5,6 +5,7 @@ from discord.ext import commands
 
 from config import CONFIG
 from core.services.issue_reporter import report_unhandled_exception
+import traceback
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -19,12 +20,13 @@ class ErrorHandler(commands.Cog):
 
     @commands.Cog.listener()
     async def on_app_command_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+        logger.info(f"Slash command error in {interaction.command.name}: {error}")
         await report_unhandled_exception(interaction=interaction, error=error, source="slash_command")
 
 
     @commands.Cog.listener()
     async def on_error(self, event_method, *args, **kwargs):
-        import traceback
+        logger.info(f"Unhandled error in {event_method}: {args} {kwargs}")
         error_text = traceback.format_exc()
         await report_unhandled_exception(ctx=None, error=error_text, source=event_method)
 
