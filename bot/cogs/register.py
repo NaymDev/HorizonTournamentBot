@@ -43,7 +43,7 @@ class RegisterCog(commands.Cog):
     async def register(self, interaction: discord.Interaction, ign: str):
         await interaction.response.defer(thinking=True, ephemeral=True)
         
-        uuid_for_username = fetch_minecraft_uuid(ign)
+        uuid_for_username = await fetch_minecraft_uuid(ign)
         if not uuid_for_username:
             await interaction.followup.send(f"❌ The username `{ign}` does not exist. Please check the spelling and try again.", ephemeral=True)
             return
