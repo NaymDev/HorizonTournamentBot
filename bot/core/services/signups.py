@@ -1,4 +1,3 @@
-from atexit import unregister
 from core.repositories.minecraft import MinecraftRepository
 from core.repositories.players import PlayerRepository
 from core.repositories.teams import TeamRepository
