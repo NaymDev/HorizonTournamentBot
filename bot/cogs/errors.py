@@ -1,7 +1,5 @@
-from code import interact
 import logging
 from logging.handlers import RotatingFileHandler
-import discord
 from discord.ext import commands
 
 from config import CONFIG

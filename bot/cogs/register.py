@@ -2,6 +2,8 @@ import random
 import discord
 from discord.ext import commands
 
+from bot.hypixel import fetch_hypixel_discord_tag
+from bot.mojang import fetch_minecraft_uuid
 from db.session import SessionLocal
 from config import CONFIG
 from core.repositories.players import PlayerRepository
@@ -36,9 +38,15 @@ class RegisterCog(commands.Cog):
             
             await interaction.channel.send(random.choice(CONFIG.register.hello_messages).replace("{user}", interaction.user.mention))
     
+    # Move the uuid eftching and checking logic into the business layer
     @discord.app_commands.command()
     async def register(self, interaction: discord.Interaction, ign: str):
         await interaction.response.defer(thinking=True, ephemeral=True)
+        
+        uuid_for_username = fetch_minecraft_uuid(ign)
+        if not uuid_for_username:
+            await interaction.followup.send(f"❌ The username `{ign}` does not exist. Please check the spelling and try again.", ephemeral=True)
+            return
         
         async with self.session_factory() as session:
             minecraft_repo = MinecraftRepository(session)
@@ -49,7 +57,7 @@ class RegisterCog(commands.Cog):
             try:
                 await service.link_account(
                     discord_member=interaction.user,
-                    uuid=ign, # TODO: get uuid from mojang api
+                    uuid=uuid_for_username,
                     username=ign
                 )
                 await interaction.followup.send(f"✅ Successfully registered your Minecraft account `{ign}`!", ephemeral=True)
