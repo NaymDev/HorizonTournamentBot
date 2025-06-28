@@ -43,7 +43,7 @@ class SignupService:
         if not tournament:
             raise TournamentNotFound("Tournament not found in this channel")
         
-        if tournament.status != models.TournamentStatus.signups_open:
+        if tournament.status != models.TournamentStatus.signups:
             raise SignupClosed("Tournament signup is closed")
         
         if len(team_name) > TEAM_NAME_MAX_LENGTH:

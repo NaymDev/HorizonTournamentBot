@@ -16,6 +16,6 @@ async def setup():
     await session.init_db()
 
 if __name__ == "__main__":
-    asyncio.get_event_loop().run_until_complete(setup())
+    asyncio.run(setup())
     bot = HorizonBot()
     bot.run(DISCORD_TOKEN)
