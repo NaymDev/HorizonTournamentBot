@@ -5,7 +5,7 @@ from discord.ext import commands
 from db.session import SessionLocal
 from config import CONFIG
 from core.repositories.players import PlayerRepository
-from core.services.minecraft_account import MinecraftAccountService, PlayerNotFound
+from core.services.minecraft_account import DiscordTagMissmatch, MinecraftAccountService, NoDiscordTagOnHypixel, PlayerNotFound
 from core.repositories.minecraft import MinecraftRepository
 
 class RegisterCog(commands.Cog):
@@ -48,14 +48,19 @@ class RegisterCog(commands.Cog):
             
             try:
                 await service.link_account(
-                    discord_user_id=str(interaction.user.id),
+                    discord_member=interaction.user,
                     uuid=ign, # TODO: get uuid from mojang api
                     username=ign
                 )
                 await interaction.followup.send(f"✅ Successfully registered your Minecraft account `{ign}`!", ephemeral=True)
-            except PlayerNotFound as e:
+            except PlayerNotFound:
                 await interaction.followup.send(f"🤔 Hmm. I don't know you, sorry. Try and say `/hello` in <#{CONFIG.register.hello_channel_id}> first.", ephemeral=True)
-                return
+            except NoDiscordTagOnHypixel:
+                await interaction.followup.send("🤔 Hmm. I can't find your Discord tag on Hypixel. Please ensure you have linked your Discord account on Hypixel.", ephemeral=True)
+            except DiscordTagMissmatch:
+                await interaction.followup.send("🤔 Hmm. The Discord tag from Hypixel does not match your Discord ID. Please ensure you have linked your Discord account on Hypixel correctly.", ephemeral=True)
+            except Exception as e:
+                raise e
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(RegisterCog(bot, SessionLocal))
