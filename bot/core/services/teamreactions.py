@@ -96,10 +96,13 @@ class TeamReactionService:
         return status
     
     async def _handle_team_approved(self, message: discord.Message, team_name: str, members_discord_ids: list[str]):
-        message.edit(embed=
+        await message.edit(embed=
                      discord.Embed(
                          title= team_name,
                          description="\n".join([f"<:pr_enter:1370057653606154260> <@{user_id}>" for user_id in members_discord_ids]),
                          footer="Team Approved",
+                         color=discord.Color.green()
                      )
                     )
+        await message.clear_reactions()
+        await message.add_reaction("🟢")
