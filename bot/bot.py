@@ -5,7 +5,9 @@ from discord.ext import commands
 class HorizonBot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
+        intents.messages = True
         intents.message_content = True
+        intents.reactions = True
         super().__init__(command_prefix="!", intents=intents)
 
     async def on_ready(self):
