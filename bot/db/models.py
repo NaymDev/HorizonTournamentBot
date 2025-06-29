@@ -127,9 +127,9 @@ class TeamMembers(Base):
     team_id = Column(Integer, ForeignKey('teams.id'), nullable=False)
     player_id = Column(Integer, ForeignKey('players.id'), nullable=False)
     role = Column(Enum(PlayerRole), default=PlayerRole.member)
-    accepted = Column(Boolean, default=False) # unsused?
-    responded = Column(Boolean, default=False) # unsused?
-    response = Column(Enum(Reaction), nullable=True) # unsused?
+    #accepted = Column(Boolean, default=False) # unsused?
+    #responded = Column(Boolean, default=False) # unsused?
+    #response = Column(Enum(Reaction), nullable=True) # unsused?
     
     team = relationship("Teams", back_populates="members")
     player = relationship("Players", back_populates="team_memberships")
