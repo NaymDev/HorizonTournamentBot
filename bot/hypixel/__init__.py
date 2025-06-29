@@ -3,10 +3,14 @@ from aiohttp import ClientTimeout
 import aiohttp
 
 async def fetch_hypixel_discord_tag(api_key: str, uuid: str) -> Optional[str]:
-    hypixel_url = f"https://api.hypixel.net/player?key={api_key}&uuid={uuid}"
+    hypixel_url = f"https://api.hypixel.net/player?uuid={uuid}"
     fetched_discord_tag = None
 
-    async with aiohttp.ClientSession(timeout=ClientTimeout(total=10)) as sess:
+    headers = {
+        "API-Key": api_key
+    }
+
+    async with aiohttp.ClientSession(timeout=ClientTimeout(total=10), headers=headers) as sess:
         async with sess.get(hypixel_url) as resp:
             if resp.status == 200:
                 result = await resp.json()

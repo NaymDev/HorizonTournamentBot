@@ -17,6 +17,15 @@ class PlayerRepository:
         except SQLAlchemyError:
             return None
     
+    async def get_by_id(self, id: str) -> models.Players | None:
+        """Retrieve a player by their ID."""
+        try:
+            stmt = select(models.Players).where(models.Players.id == id)
+            result = await self.session.execute(stmt)
+            return result.scalars().first()
+        except SQLAlchemyError:
+            return None
+    
     async def create_player(self, discord_user_id: str, username: str) -> models.Players | None:
         """Create a new player."""
         new_player = models.Players(discord_user_id=discord_user_id, username=username)

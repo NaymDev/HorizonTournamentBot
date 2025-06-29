@@ -1,3 +1,5 @@
+import datetime
+from aiosqlite import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from db import models
@@ -27,3 +29,20 @@ class TeamRepository:
         if team:
             team.status = status
             await self.session.commit()
+    
+    async def create_team(self, tournament_id: int, team_name: str, status: models.TeamStatus = models.TeamStatus.pending) -> models.Teams:
+        """Create a new team under a tournament with initial status."""
+        new_team = models.Teams(
+            tournament_id=tournament_id,
+            team_name=team_name,
+            signup_time=datetime.datetime.now(datetime.timezone.utc),
+            status=status
+        )
+        self.session.add(new_team)
+        try:
+            await self.session.commit()
+            await self.session.refresh(new_team)
+            return new_team
+        except IntegrityError:
+            await self.session.rollback()
+            raise ValueError(f"Team with name '{team_name}' already exists in tournament {tournament_id}.")

@@ -82,6 +82,48 @@ class RegisterCog(commands.Cog):
             except Exception as e:
                 await interaction.followup.send("❌ An unexpected error occurred while trying to register your account. Please try again later.", ephemeral=True)
                 raise e
-
+    
+    @discord.app_commands.command()
+    @discord.app_commands.default_permissions(administrator=True)
+    async def register_other(self, interaction: discord.Interaction, discord_member: discord.Member, ign: str):
+        await interaction.response.defer(thinking=True, ephemeral=True)
+        
+        async with self.session_factory() as session:
+            player_repo = PlayerRepository(session)
+            if not (await player_repo.get_by_discord_id(str(discord_member.id))):
+                await player_repo.create_player(
+                    discord_member.id,
+                    discord_member.name
+                )
+            
+            uuid_for_username = await fetch_minecraft_uuid(ign)
+            if not uuid_for_username:
+                await interaction.followup.send(f"❌ The username `{ign}` does not exist. Please check the spelling and try again.", ephemeral=True)
+                return
+        
+            minecraft_repo = MinecraftRepository(session)
+            
+            service = MinecraftAccountService(minecraft_repo, player_repo)
+            
+            try:
+                await service.link_account(
+                    discord_member=discord_member,
+                    uuid=uuid_for_username,
+                    username=ign
+                )
+                await interaction.followup.send(f"✅ Successfully registered your Minecraft account `{ign}`!", ephemeral=True)
+            except PlayerNotFound:
+                await interaction.followup.send(f"🤔 Hmm. I don't know you, sorry. Try and say `/hello` in <#{CONFIG.register.hello_channel_id}> first.", ephemeral=True)
+            except NoDiscordTagOnHypixel:
+                await interaction.followup.send("🤔 Hmm. I can't find your Discord tag on Hypixel. Please ensure you have linked your Discord account on Hypixel.", ephemeral=True)
+            except DiscordTagMissmatch:
+                await interaction.followup.send("🤔 Hmm. The Discord tag from Hypixel does not match your Discord ID. Please ensure you have linked your Discord account on Hypixel correctly.", ephemeral=True)
+            except AccountLinkError as e:
+                logger.error(f"Error linking account for {discord_member.name} ({discord_member.id}): {str(e)}")
+                await interaction.followup.send("❌ An error occurred while trying to register your account. If this keeps happening please contact our staff team.", ephemeral=True)
+            except Exception as e:
+                await interaction.followup.send("❌ An unexpected error occurred while trying to register your account. Please try again later.", ephemeral=True)
+                raise e
+            
 async def setup(bot: commands.Bot):
     await bot.add_cog(RegisterCog(bot, SessionLocal))

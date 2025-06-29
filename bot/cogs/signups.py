@@ -4,13 +4,15 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
+from core.repositories.members import MemberRepository
+from db import models
 from core.repositories.minecraft import MinecraftRepository
 from core.repositories.players import PlayerRepository
 from config import CONFIG
 from core.repositories.messages import MessageRepository
 from core.repositories.teams import TeamRepository
 from core.repositories.tournaments import TournamentRepository
-from core.services.signups import DuplicateTeamMemberError, SignupClosed, SignupError, SignupService, TeamNameTaken, TeamNameTooLong, TournamentNotFound, UnregisteredPlayersError
+from core.services.signups import DuplicateTeamMemberError, PlayerAlreadyInATeam, SignupClosed, SignupError, SignupService, TeamNameTaken, TeamNameTooLong, TournamentNotFound, UnregisteredPlayersError
 from core.services.teamreactions import TeamReactionService
 from db.session import SessionLocal
 
@@ -41,7 +43,7 @@ class SignupCog(commands.Cog):
             
             signup_messages = await message_repo.get_all_signup_messages()
             for msg in signup_messages:
-                channel = self.bot.get_channel(msg.discord_channel_id)
+                channel = self.bot.get_channel(msg.discord_channel_id) or await self.bot.fetch_channel(msg.discord_channel_id)
                 discord_message = await channel.fetch_message(int(msg.discord_message_id))
                 
                 if discord_message is None:
@@ -75,15 +77,20 @@ class SignupCog(commands.Cog):
             team_repo = TeamRepository(session)
             player_repo = PlayerRepository(session)
             minecraft_repo = MinecraftRepository(session)
+            message_repo = MessageRepository(session)
+            member_repo = MemberRepository(session)
             
-            service = SignupService(tournament_repo, team_repo, player_repo, minecraft_repo)
+            service = SignupService(tournament_repo, team_repo, player_repo, minecraft_repo, message_repo, member_repo)
             
             try:
                 await service.signup_team(    
                     channel_id=str(interaction.channel_id),
                     team_name=team_name,
-                    members=[p1, p2, p3, interaction.user]
+                    members=[p1, p2, p3, interaction.user],
+                    message_send=lambda team_id: self.send_singup_message(interaction.channel, TeamReactionService(team_repo, MessageRepository(session), MemberRepository(session), tournament_repo), team_id)
                 )
+                
+                await interaction.followup.send(f"✅ Team '{team_name}' successfully registered!", ephemeral=True)
             except TournamentNotFound:
                 await interaction.followup.send("⚠️ No tournament is active in this channel. Please check the tournament channel.", ephemeral=True)
             except SignupClosed:
@@ -96,11 +103,20 @@ class SignupCog(commands.Cog):
                 await interaction.followup.send("⚠️ A team cannot have duplicate members. Please ensure all members are unique.", ephemeral=True)
             except UnregisteredPlayersError as e:
                 await interaction.followup.send(embed=self._create_unregistered_players_embed(e), ephemeral=True)
+            except PlayerAlreadyInATeam as e:
+                await interaction.followup.send(f"⚠️ Player <@{e.player}> is already in a team. Please remove them from their current team before signing up.", ephemeral=True)
             except SignupError as e:
                 await interaction.followup.send(f"⚠️ Signup failed: {str(e)}", ephemeral=True)
             except Exception as e:
                 await interaction.followup.send("⚠️ An unexpected error occurred. If this keeps happening please open a ticket!", ephemeral=True)
                 raise e
+            
+    async def send_singup_message(self, channel: discord.TextChannel, team_reaction_service: TeamReactionService, team_id: str) -> discord.Message:
+        print(f"Sending signup message to channel {channel.id}...")
+        msg = await channel.send("**Team Signup**\n\n")
+        await team_reaction_service.handle_signup_reaction_check(msg)
+        await self.dm_team_status_to_members(team_id, msg)
+        return msg
     
     def _create_unregistered_players_embed(self, error: UnregisteredPlayersError) -> discord.Embed:
         embed = discord.Embed(
@@ -143,6 +159,34 @@ class SignupCog(commands.Cog):
             service = TeamReactionService(team_repo, message_repo, None, tournament_repo)
             
             service.handle_signup_reaction_check(message)
+    
+    async def dm_team_status_to_members(self, team_id: int, signup_message: discord.Message):
+        async with self.session_factory() as session:
+            team_repo = TeamRepository(session)
+            member_repo = MemberRepository(session)
+            player_repo = PlayerRepository(session)
+            
+            team = await team_repo.get_team_for_team_id(team_id)
+            if not team:
+                logger.warning(f"Team with ID {team_id} not found.")
+                return
+            
+            members = [await player_repo.get_by_id(member.player_id) for member in await member_repo.get_members_for_team(team_id)]
+            
+            for member in members:
+                user = self.bot.get_user(int(member.discord_user_id)) or await self.bot.fetch_user(int(member.discord_user_id))
+                if user:
+                    try:
+                        await signup_message.forward(user.dm_channel or await user.create_dm())
+                        match team.status:
+                            case models.TeamStatus.pending:
+                                await user.send(f"*Your signup message needs {len(members)} ✅ reactions, one from each team member to be approved!*")
+                            case models.TeamStatus.accepted:
+                                await user.send(f"Your team '{team.team_name}' has been successfully registered for the tournament! 🎉\n\n")
+                            case models.TeamStatus.denied:
+                                await user.send(f"Your team '{team.team_name}' has been denied for the tournament. Please check the signup message for details.")
+                    except Exception as e:
+                        logger.error(f"Could not send DM to {user.name} ({user.id}). They may have DMs disabled: {str(e)}")
         
         
 

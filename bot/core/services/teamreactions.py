@@ -1,19 +1,21 @@
 import discord
 
+from core.repositories.members import MemberRepository
+from core.repositories.players import PlayerRepository
 from core.repositories.tournaments import TournamentRepository
 from core.repositories.messages import MessageRepository
 from core.repositories.teams import TeamRepository
 from db import models
 
 class TeamReactionService:
-    def __init__(self, team_repo: TeamRepository, msg_repo: MessageRepository, member_repo, tournament_repo: TournamentRepository):
+    def __init__(self, team_repo: TeamRepository, msg_repo: MessageRepository, member_repo: MemberRepository, tournament_repo: TournamentRepository):
         self.team_repo: TeamRepository = team_repo
         self.msg_repo: MessageRepository = msg_repo
-        self.member_repo = member_repo
+        self.member_repo: MemberRepository = member_repo
         self.tournament_repo: TournamentRepository = tournament_repo
 
     async def handle_signup_reaction_check(self, discord_message):
-        msg_model: models.Messages = self.msg_repo.get_by_discord_message_id(discord_message.id)
+        msg_model: models.Messages = await self.msg_repo.get_by_discord_message_id(discord_message.id)
         if not msg_model:
             return
         
@@ -23,9 +25,9 @@ class TeamReactionService:
         if not team or team.status != models.TeamStatus.pending:
             return
         
-        member_ids = self.member_repo.get_member_ids(team_id)
+        members_discord_ids = [member.player.discord_user_id for member in await self.member_repo.get_members_for_team(team_id)]
 
-        await self._clean_invalid_reactions(discord_message, member_ids)
+        await self._clean_invalid_reactions(discord_message, members_discord_ids)
 
         reactions = await self._collect_reactions(discord_message)
         await self._ensure_reaction_presence(discord_message)
@@ -34,9 +36,9 @@ class TeamReactionService:
         if not tournament or tournament.status != models.TournamentStatus.signups or tournament.signups_locked_reason:
             return
         
-        match await self._update_team_status(team_id, reactions, member_ids):
+        match await self._update_team_status(team_id, reactions, members_discord_ids):
             case models.TeamStatus.accepted:
-                await self._handle_team_approved(discord_message, team.team_name, member_ids)
+                await self._handle_team_approved(discord_message, team.team_name, members_discord_ids)
 
     async def _clean_invalid_reactions(self, message, member_ids):
         for reaction in message.reactions:

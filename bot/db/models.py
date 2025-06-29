@@ -155,7 +155,7 @@ class Messages(Base):
     discord_message_id = Column(String, nullable=False, unique=True)
     discord_channel_id = Column(String, nullable=False)
     team_id = Column(Integer, ForeignKey('teams.id'), nullable=False)
-    purpose = Column(String)  # e.g. 'signup confirmation message'
+    purpose = Column(String, default="signup confirmation message")  # e.g. 'signup confirmation message'
     
     team = relationship("Teams", back_populates="messages")
 
