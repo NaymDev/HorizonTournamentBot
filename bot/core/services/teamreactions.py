@@ -40,7 +40,7 @@ class TeamReactionService:
             return
         
         if team.status != models.TeamStatus.pending:
-            return 
+            return
         
         match await self._update_team_status(team_id, reactions, members_discord_ids):
             case models.TeamStatus.accepted:
