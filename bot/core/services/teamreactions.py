@@ -45,6 +45,8 @@ class TeamReactionService:
         match await self._update_team_status(team_id, reactions, members_discord_ids):
             case models.TeamStatus.accepted:
                 await self._handle_team_approved(discord_message, team.team_name, members_discord_ids)
+            case models.TeamStatus.rejected:
+                await self._handle_team_rejected(discord_message, team.team_name, members_discord_ids)
 
     async def _clean_invalid_reactions(self, message, member_ids, team_status):
         for reaction in message.reactions:
@@ -123,3 +125,14 @@ class TeamReactionService:
                     )
         await message.clear_reactions()
         await message.add_reaction("🟢")
+    
+    async def _handle_team_rejected(self, message: discord.Message, team_name: str, members_discord_ids: list[str]):
+        await message.edit(embed=
+                     discord.Embed(
+                         title= team_name,
+                         description="\n".join([f"<:pr_enter:1370057653606154260> <@{user_id}>" for user_id in members_discord_ids]),
+                         color=discord.Color.red()
+                     ).set_footer(text="Team Rejected!")
+                    )
+        await message.clear_reactions()
+        await message.add_reaction("⛔")
