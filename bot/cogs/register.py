@@ -4,7 +4,6 @@ import random
 import discord
 from discord.ext import commands
 
-from hypixel import fetch_hypixel_discord_tag
 from mojang import fetch_minecraft_uuid
 from db.session import SessionLocal
 from config import CONFIG
