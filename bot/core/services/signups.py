@@ -54,7 +54,7 @@ class SignupService:
         self.message_repo: MessageRepository = message_repo
         self.member_repo: MemberRepository = member_repo
     
-    async def signup_team(self, channel_id: str, team_name, members, message_send: Callable[[str], Awaitable[discord.Message]]) -> discord.Message:
+    async def signup_team(self, channel_id: str, team_name, members, message_send: Callable[[str, list[int]], Awaitable[discord.Message]]) -> discord.Message:
         tournament = await self.tournament_repo.get_tournament_for_signup_channel_id(channel_id)
             
         if not tournament:
@@ -94,7 +94,7 @@ class SignupService:
             player = await self.player_repo.get_by_discord_id(member.id)
             await self.member_repo.add_member_to_team(team_id=team.id, player_id=player.id)
 
-        message = await message_send(team.id)
+        message = await message_send(team, [member.id for member in members])
         await self.message_repo.create_message(
             discord_message_id=str(message.id),
             discord_channel_id=str(message.channel.id),

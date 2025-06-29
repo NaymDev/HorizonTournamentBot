@@ -44,7 +44,7 @@ class TeamReactionService:
     async def _clean_invalid_reactions(self, message, member_ids):
         for reaction in message.reactions:
             emoji = str(reaction.emoji)
-            if emoji not in {"✅", "❌"}:
+            if emoji not in {"✅", "⛔"}:
                 await message.clear_reaction(reaction.emoji)
                 continue
 
@@ -62,7 +62,7 @@ class TeamReactionService:
         return result
     
     async def _ensure_reaction_presence(self, message: discord.Message):
-        required_emojis = {"✅", "❌"}
+        required_emojis = {"✅", "⛔"}
         bot_user = message.guild.me
 
         for emoji in required_emojis:
@@ -82,7 +82,7 @@ class TeamReactionService:
 
     async def _update_team_status(self, team_id, reactions, member_ids) -> models.TeamStatus:
         accepted = all(uid in reactions.get("✅", []) for uid in member_ids)
-        denied = any(uid in reactions.get("❌", []) for uid in member_ids)
+        denied = any(uid in reactions.get("⛔", []) for uid in member_ids)
 
         
         if denied:

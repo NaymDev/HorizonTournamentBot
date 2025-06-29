@@ -89,7 +89,7 @@ class SignupCog(commands.Cog):
                     channel_id=str(interaction.channel_id),
                     team_name=team_name,
                     members=[p1, p2, p3, interaction.user],
-                    message_send=lambda team_id: self.send_singup_message(interaction.channel)
+                    message_send=lambda team, members_discord_ids: self.send_singup_message(interaction.channel, team, members_discord_ids)
                 )
                 await TeamReactionService(team_repo, MessageRepository(session), MemberRepository(session), tournament_repo, player_repo).handle_signup_reaction_check(msg)
                 await self.dm_team_status_to_members((await message_repo.get_by_discord_message_id(msg.id)).team_id, msg)
@@ -115,9 +115,13 @@ class SignupCog(commands.Cog):
                 await interaction.followup.send("⚠️ An unexpected error occurred. If this keeps happening please open a ticket!", ephemeral=True)
                 raise e
             
-    async def send_singup_message(self, channel: discord.TextChannel) -> discord.Message:
+    async def send_singup_message(self, channel: discord.TextChannel, team: models.Teams, members_discord_ids: list[int]) -> discord.Message:
         print(f"Sending signup message to channel {channel.id}...")
-        msg = await channel.send("**Team Signup**\n\n")
+        msg = await channel.send(embed=discord.Embed(
+            title=team.team_name,
+            description="\n".join([f"<:pr_enter:1370057653606154260> <@{user_id}>" for user_id in members_discord_ids]),
+            footer="React ✅ to approve or ⛔ to deny",
+        ))
         return msg
     
     def _create_unregistered_players_embed(self, error: UnregisteredPlayersError) -> discord.Embed:
