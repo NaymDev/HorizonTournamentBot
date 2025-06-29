@@ -119,7 +119,7 @@ class TeamReactionService:
                          title= team_name,
                          description="\n".join([f"<:pr_enter:1370057653606154260> <@{user_id}>" for user_id in members_discord_ids]),
                          color=discord.Color.green()
-                     ).set_footer(text="Team Approved")
+                     ).set_footer(text="Team Approved!")
                     )
         await message.clear_reactions()
         await message.add_reaction("🟢")
