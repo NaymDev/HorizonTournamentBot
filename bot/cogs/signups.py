@@ -52,7 +52,7 @@ class SignupCog(commands.Cog):
                     logger.warning(f"Signup Message with ID {msg.discord_message_id} not found in channel {msg.discord_channel_id}.")
                     continue
 
-                service.handle_signup_reaction_check(discord_message)
+                await service.handle_signup_reaction_check(discord_message)
     
     @app_commands.command(
         name="signup",
@@ -161,7 +161,7 @@ class SignupCog(commands.Cog):
             
             service = TeamReactionService(team_repo, message_repo, member_repo, tournament_repo, player_repo)
             
-            service.handle_signup_reaction_check(message)
+            await service.handle_signup_reaction_check(message)
     
     async def dm_team_status_to_members(self, team_id: int, signup_message: discord.Message):
         async with self.session_factory() as session:

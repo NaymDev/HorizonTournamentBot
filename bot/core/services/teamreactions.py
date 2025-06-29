@@ -48,7 +48,7 @@ class TeamReactionService:
                 await message.clear_reaction(reaction.emoji)
                 continue
 
-            users = await reaction.users().flatten()
+            users = [user async for user in reaction.users()]
             for user in users:
                 if not user.bot and user.id not in member_ids:
                     await message.remove_reaction(reaction.emoji, user)
@@ -57,7 +57,7 @@ class TeamReactionService:
         result = {}
         for reaction in message.reactions:
             emoji = str(reaction.emoji)
-            users = await reaction.users().flatten()
+            users = [user async for user in reaction.users()]
             result[emoji] = [user.id for user in users if not user.bot]
         return result
     
@@ -69,7 +69,7 @@ class TeamReactionService:
             reaction = next((r for r in message.reactions if str(r.emoji) == emoji), None)
 
             if reaction:
-                users = await reaction.users().flatten()
+                users = [user async for user in reaction.users()]
                 non_bot_users = [u for u in users if not u.bot]
                 bot_reacted = any(u.id == bot_user.id for u in users)
 
