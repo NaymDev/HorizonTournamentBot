@@ -152,7 +152,7 @@ class SignupCog(commands.Cog):
                 return
             
             channel = self.bot.get_channel(payload.channel_id) or await self.bot.fetch_channel(payload.channel_id)
-            message = channel.get_partial_message(payload.message_id) or await channel.fetch_message(payload.message_id)
+            message = await channel.fetch_message(payload.message_id)
             
             team_repo = TeamRepository(session)
             message_repo = MessageRepository(session)

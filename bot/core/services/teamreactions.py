@@ -26,7 +26,7 @@ class TeamReactionService:
         if not team or team.status != models.TeamStatus.pending:
             return
         
-        members_discord_ids = [(await self.player_repo.get_by_id(member.player_id)).discord_user_id for member in await self.member_repo.get_members_for_team(team_id)]
+        members_discord_ids = [int((await self.player_repo.get_by_id(member.player_id)).discord_user_id) for member in await self.member_repo.get_members_for_team(team_id)]
 
         await self._clean_invalid_reactions(discord_message, members_discord_ids)
 
