@@ -1,3 +1,5 @@
+from email.policy import default
+import re
 import discord
 
 from core.repositories.members import MemberRepository
@@ -23,28 +25,35 @@ class TeamReactionService:
         team_id = msg_model.team_id
         
         team = await self.team_repo.get_team_for_team_id(team_id)
-        if not team or team.status != models.TeamStatus.pending:
+        if not team:
             return
         
         members_discord_ids = [int((await self.player_repo.get_by_id(member.player_id)).discord_user_id) for member in await self.member_repo.get_members_for_team(team_id)]
 
-        await self._clean_invalid_reactions(discord_message, members_discord_ids)
+        await self._clean_invalid_reactions(discord_message, members_discord_ids, team.status)
 
         reactions = await self._collect_reactions(discord_message)
-        await self._ensure_reaction_presence(discord_message)
+        await self._ensure_reaction_presence(discord_message, team.status)
         
         tournament = await self.tournament_repo.get_tournament_for_signup_channel_id(discord_message.channel.id)
         if not tournament or tournament.status != models.TournamentStatus.signups or tournament.signups_locked_reason:
             return
         
+        if team.status != models.TeamStatus.pending:
+            return 
+        
         match await self._update_team_status(team_id, reactions, members_discord_ids):
             case models.TeamStatus.accepted:
                 await self._handle_team_approved(discord_message, team.team_name, members_discord_ids)
 
-    async def _clean_invalid_reactions(self, message, member_ids):
+    async def _clean_invalid_reactions(self, message, member_ids, team_status):
         for reaction in message.reactions:
             emoji = str(reaction.emoji)
-            if emoji not in {"✅", "⛔"}:
+            if (
+                (team_status == models.TeamStatus.accepted and emoji != "🟢") or
+                (team_status == models.TeamStatus.rejected and emoji != "⛔") or
+                (team_status == models.TeamStatus.pending and emoji not in {"✅", "⛔"})
+            ):
                 await message.clear_reaction(reaction.emoji)
                 continue
 
@@ -61,8 +70,17 @@ class TeamReactionService:
             result[emoji] = [user.id for user in users if not user.bot]
         return result
     
-    async def _ensure_reaction_presence(self, message: discord.Message):
-        required_emojis = {"✅", "⛔"}
+    async def _ensure_reaction_presence(self, message: discord.Message, team_status):
+        match team_status:
+            case models.TeamStatus.accepted:
+                required_emojis = {"🟢"}
+            case models.TeamStatus.rejected:
+                required_emojis = {"⛔"}
+            case models.TeamStatus.pending:
+                required_emojis = {"✅", "⛔"}
+            case _:
+                required_emojis = set()
+
         bot_user = message.guild.me
 
         for emoji in required_emojis:
@@ -86,7 +104,7 @@ class TeamReactionService:
 
         
         if denied:
-            status = models.TeamStatus.denied
+            status = models.TeamStatus.rejected
         elif accepted:
             status = models.TeamStatus.accepted
         else:
@@ -100,9 +118,8 @@ class TeamReactionService:
                      discord.Embed(
                          title= team_name,
                          description="\n".join([f"<:pr_enter:1370057653606154260> <@{user_id}>" for user_id in members_discord_ids]),
-                         footer="Team Approved",
                          color=discord.Color.green()
-                     )
+                     ).set_footer(text="Team Approved")
                     )
         await message.clear_reactions()
         await message.add_reaction("🟢")
