@@ -119,9 +119,8 @@ class SignupCog(commands.Cog):
         print(f"Sending signup message to channel {channel.id}...")
         msg = await channel.send(embed=discord.Embed(
             title=team.team_name,
-            description="\n".join([f"<:pr_enter:1370057653606154260> <@{user_id}>" for user_id in members_discord_ids]),
-            footer="React ✅ to approve or ⛔ to deny",
-        ))
+            description="\n".join([f"<:pr_enter:1370057653606154260> <@{user_id}>" for user_id in members_discord_ids])
+        ).set_footer("React ✅ to approve or ⛔ to deny"))
         return msg
     
     def _create_unregistered_players_embed(self, error: UnregisteredPlayersError) -> discord.Embed:
