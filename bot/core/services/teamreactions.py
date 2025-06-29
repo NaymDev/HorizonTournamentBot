@@ -1,5 +1,3 @@
-from email.policy import default
-import re
 import discord
 
 from core.repositories.members import MemberRepository
