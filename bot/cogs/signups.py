@@ -39,7 +39,9 @@ class SignupCog(commands.Cog):
             team_repo = TeamRepository(session)
             message_repo = MessageRepository(session)
             tournament_repo = TournamentRepository(session)
-            service = TeamReactionService(team_repo, message_repo, None, tournament_repo)
+            member_repo = MemberRepository(session)
+            player_repo = PlayerRepository(session)
+            service = TeamReactionService(team_repo, message_repo, member_repo, tournament_repo, player_repo)
             
             signup_messages = await message_repo.get_all_signup_messages()
             for msg in signup_messages:
@@ -83,12 +85,14 @@ class SignupCog(commands.Cog):
             service = SignupService(tournament_repo, team_repo, player_repo, minecraft_repo, message_repo, member_repo)
             
             try:
-                await service.signup_team(    
+                msg = await service.signup_team(    
                     channel_id=str(interaction.channel_id),
                     team_name=team_name,
                     members=[p1, p2, p3, interaction.user],
-                    message_send=lambda team_id: self.send_singup_message(interaction.channel, TeamReactionService(team_repo, MessageRepository(session), MemberRepository(session), tournament_repo), team_id)
+                    message_send=lambda team_id: self.send_singup_message(interaction.channel)
                 )
+                await TeamReactionService(team_repo, MessageRepository(session), MemberRepository(session), tournament_repo, player_repo).handle_signup_reaction_check(msg)
+                await self.dm_team_status_to_members((await message_repo.get_by_discord_message_id(msg.id)).team_id, msg)
                 
                 await interaction.followup.send(f"✅ Team '{team_name}' successfully registered!", ephemeral=True)
             except TournamentNotFound:
@@ -111,11 +115,9 @@ class SignupCog(commands.Cog):
                 await interaction.followup.send("⚠️ An unexpected error occurred. If this keeps happening please open a ticket!", ephemeral=True)
                 raise e
             
-    async def send_singup_message(self, channel: discord.TextChannel, team_reaction_service: TeamReactionService, team_id: str) -> discord.Message:
+    async def send_singup_message(self, channel: discord.TextChannel) -> discord.Message:
         print(f"Sending signup message to channel {channel.id}...")
         msg = await channel.send("**Team Signup**\n\n")
-        await team_reaction_service.handle_signup_reaction_check(msg)
-        await self.dm_team_status_to_members(team_id, msg)
         return msg
     
     def _create_unregistered_players_embed(self, error: UnregisteredPlayersError) -> discord.Embed:
@@ -154,9 +156,10 @@ class SignupCog(commands.Cog):
             
             team_repo = TeamRepository(session)
             message_repo = MessageRepository(session)
+            member_repo = MemberRepository(session)
+            player_repo = PlayerRepository(session)
             
-            
-            service = TeamReactionService(team_repo, message_repo, None, tournament_repo)
+            service = TeamReactionService(team_repo, message_repo, member_repo, tournament_repo, player_repo)
             
             service.handle_signup_reaction_check(message)
     

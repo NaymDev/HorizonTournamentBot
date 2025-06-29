@@ -8,11 +8,12 @@ from core.repositories.teams import TeamRepository
 from db import models
 
 class TeamReactionService:
-    def __init__(self, team_repo: TeamRepository, msg_repo: MessageRepository, member_repo: MemberRepository, tournament_repo: TournamentRepository):
+    def __init__(self, team_repo: TeamRepository, msg_repo: MessageRepository, member_repo: MemberRepository, tournament_repo: TournamentRepository, player_repo: PlayerRepository):
         self.team_repo: TeamRepository = team_repo
         self.msg_repo: MessageRepository = msg_repo
         self.member_repo: MemberRepository = member_repo
         self.tournament_repo: TournamentRepository = tournament_repo
+        self.player_repo: PlayerRepository = player_repo
 
     async def handle_signup_reaction_check(self, discord_message):
         msg_model: models.Messages = await self.msg_repo.get_by_discord_message_id(discord_message.id)
@@ -25,7 +26,7 @@ class TeamReactionService:
         if not team or team.status != models.TeamStatus.pending:
             return
         
-        members_discord_ids = [member.player.discord_user_id for member in await self.member_repo.get_members_for_team(team_id)]
+        members_discord_ids = [(await self.player_repo.get_by_id(member.player_id)).discord_user_id for member in await self.member_repo.get_members_for_team(team_id)]
 
         await self._clean_invalid_reactions(discord_message, members_discord_ids)
 
