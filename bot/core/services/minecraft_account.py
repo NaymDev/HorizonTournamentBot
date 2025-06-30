@@ -68,7 +68,7 @@ class MinecraftAccountService:
                 return
 
             username = await fetch_minecraft_username(minecraft_account.minecraft_uuid) or minecraft_account.minecraft_username
-            self.minecraft_repo.update_account(player.id, minecraft_account.minecraft_uuid, username)
+            await self.minecraft_repo.update_account(player.id, minecraft_account.minecraft_uuid, username)
             
         await member.edit(nick=username)
 
