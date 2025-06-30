@@ -8,7 +8,7 @@ from mojang import fetch_minecraft_uuid
 from db.session import SessionLocal
 from config import CONFIG
 from core.repositories.players import PlayerRepository
-from core.services.minecraft_account import AccountLinkError, DiscordTagMissmatch, MinecraftAccountService, NoDiscordTagOnHypixel, PlayerNotFound
+from core.services.minecraft_account import AccountLinkError, DiscordTagMissmatch, MinecraftAccountNotFound, MinecraftAccountService, NoDiscordTagOnHypixel, PlayerNotFound
 from core.repositories.minecraft import MinecraftRepository
 
 logger = logging.getLogger(__name__)
@@ -51,11 +51,6 @@ class RegisterCog(commands.Cog):
     async def register(self, interaction: discord.Interaction, ign: str):
         await interaction.response.defer(thinking=True, ephemeral=True)
         
-        uuid_for_username = await fetch_minecraft_uuid(ign)
-        if not uuid_for_username:
-            await interaction.followup.send(f"❌ The username `{ign}` does not exist. Please check the spelling and try again.", ephemeral=True)
-            return
-        
         async with self.session_factory() as session:
             minecraft_repo = MinecraftRepository(session)
             player_repo = PlayerRepository(session)
@@ -65,12 +60,13 @@ class RegisterCog(commands.Cog):
             try:
                 await service.link_account(
                     discord_member=interaction.user,
-                    uuid=uuid_for_username,
                     username=ign
                 )
                 await interaction.followup.send(f"✅ Successfully registered your Minecraft account `{ign}`!", ephemeral=True)
             except PlayerNotFound:
                 await interaction.followup.send(f"🤔 Hmm. I don't know you, sorry. Try and say `/hello` in <#{CONFIG.register.hello_channel_id}> first.", ephemeral=True)
+            except MinecraftAccountNotFound as e:
+                await interaction.followup.send(f"❌ The username `{e.username}` does not exist. Please check the spelling and try again.", ephemeral=True)
             except NoDiscordTagOnHypixel:
                 await interaction.followup.send("🤔 Hmm. I can't find your Discord tag on Hypixel. Please ensure you have linked your Discord account on Hypixel.", ephemeral=True)
             except DiscordTagMissmatch:
@@ -94,11 +90,6 @@ class RegisterCog(commands.Cog):
                     discord_member.id,
                     discord_member.name
                 )
-            
-            uuid_for_username = await fetch_minecraft_uuid(ign)
-            if not uuid_for_username:
-                await interaction.followup.send(f"❌ The username `{ign}` does not exist. Please check the spelling and try again.", ephemeral=True)
-                return
         
             minecraft_repo = MinecraftRepository(session)
             
@@ -107,12 +98,13 @@ class RegisterCog(commands.Cog):
             try:
                 await service.link_account(
                     discord_member=discord_member,
-                    uuid=uuid_for_username,
                     username=ign
                 )
                 await interaction.followup.send(f"✅ Successfully registered your Minecraft account `{ign}`!", ephemeral=True)
             except PlayerNotFound:
                 await interaction.followup.send(f"🤔 Hmm. I don't know you, sorry. Try and say `/hello` in <#{CONFIG.register.hello_channel_id}> first.", ephemeral=True)
+            except MinecraftAccountNotFound as e:
+                await interaction.followup.send(f"❌ The username `{e.username}` does not exist. Please check the spelling and try again.", ephemeral=True)
             except NoDiscordTagOnHypixel:
                 await interaction.followup.send("🤔 Hmm. I can't find your Discord tag on Hypixel. Please ensure you have linked your Discord account on Hypixel.", ephemeral=True)
             except DiscordTagMissmatch:
