@@ -1,6 +1,5 @@
 import discord
-from sqlalchemy import null
-from bot.mojang import fetch_minecraft_username, fetch_minecraft_uuid
+from mojang import fetch_minecraft_username, fetch_minecraft_uuid
 from config import CONFIG
 from hypixel import fetch_hypixel_discord_tag
 from core.repositories.minecraft import MinecraftRepository

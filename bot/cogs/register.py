@@ -4,7 +4,6 @@ import random
 import discord
 from discord.ext import commands
 
-from mojang import fetch_minecraft_uuid
 from db.session import SessionLocal
 from config import CONFIG
 from core.repositories.players import PlayerRepository
@@ -116,7 +115,7 @@ class RegisterCog(commands.Cog):
                 await interaction.followup.send("❌ An unexpected error occurred while trying to register your account. Please try again later.", ephemeral=True)
                 raise e
     
-    @discord.app_commands.command("update")
+    @discord.app_commands.command(name="update")
     @discord.app_commands.guild_only()
     @discord.app_commands.checks.cooldown(1, 180)
     async def update(self, interaction: discord.Interaction):
