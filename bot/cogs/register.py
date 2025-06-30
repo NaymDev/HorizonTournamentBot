@@ -115,6 +115,29 @@ class RegisterCog(commands.Cog):
             except Exception as e:
                 await interaction.followup.send("❌ An unexpected error occurred while trying to register your account. Please try again later.", ephemeral=True)
                 raise e
+    
+    @discord.app_commands.command("update")
+    @discord.app_commands.guild_only()
+    @discord.app_commands.checks.cooldown(1, 180)
+    async def update(self, interaction: discord.Interaction):
+        await interaction.response.defer(thinking=True, ephemeral=True)
+        
+        async with self.session_factory() as session:
+            minecraft_repo = MinecraftRepository(session)
+            player_repo = PlayerRepository(session)
+            
+            service = MinecraftAccountService(minecraft_repo, player_repo)
+            
+            try:
+                await service.update_discord_nick(interaction.user)
+                await interaction.followup.send("✅ Successfully updated your Discord nickname!", ephemeral=True)
+            except PlayerNotFound:
+                await interaction.followup.send(f"🤔 Hmm. I don't know you, sorry. Try and say `/hello` in <#{CONFIG.register.hello_channel_id}> first.", ephemeral=True)
+            
+    @update.error
+    async def on_test_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+        if isinstance(error, discord.app_commands.CommandOnCooldown):
+            await interaction.response.send_message(str(error), ephemeral=True)
             
 async def setup(bot: commands.Bot):
     await bot.add_cog(RegisterCog(bot, SessionLocal))
