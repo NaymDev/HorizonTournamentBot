@@ -59,10 +59,13 @@ async def setup(bot):
         await bot.add_cog(ErrorHandler(bot))
         import asyncio
 
+        def handle_async_exception_sync(loop, context):
+            asyncio.create_task(handle_async_exception(loop, context))
+        
         async def handle_async_exception(loop, context):
             msg = context.get("exception", context["message"])
             logger.info(f"Unhandled asyncio exception: {msg}")
             await report_unhandled_exception(error=msg, source="asyncio loop exception")
             
         loop = asyncio.get_event_loop()
-        loop.set_exception_handler(handle_async_exception)
+        loop.set_exception_handler(handle_async_exception_sync)
