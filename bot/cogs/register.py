@@ -73,6 +73,16 @@ class RegisterCog(commands.Cog):
             except AccountLinkError as e:
                 logger.error(f"Error linking account for {interaction.user.name} ({interaction.user.id}): {str(e)}")
                 await interaction.followup.send("❌ An error occurred while trying to register your account. If this keeps happening please contact our staff team.", ephemeral=True)
+            except discord.Forbidden:
+                await interaction.followup.send(
+                    "✅ Successfully registered your Minecraft account, but I don't have permission to change your nickname.",
+                    ephemeral=True
+                )
+            except discord.HTTPException:
+                await interaction.followup.send(
+                    "⚠️ Something went wrong while trying to change your nickname. Please try again later.",
+                    ephemeral=True
+                )
             except Exception as e:
                 await interaction.followup.send("❌ An unexpected error occurred while trying to register your account. Please try again later.", ephemeral=True)
                 raise e
@@ -99,7 +109,7 @@ class RegisterCog(commands.Cog):
                     discord_member=discord_member,
                     username=ign
                 )
-                await interaction.followup.send(f"✅ Successfully registered your Minecraft account `{ign}`!", ephemeral=True)
+                await interaction.followup.send(f"✅ Successfully registered with Minecraft account `{ign}`!", ephemeral=True)
             except PlayerNotFound:
                 await interaction.followup.send(f"🤔 Hmm. I don't know you, sorry. Try and say `/hello` in <#{CONFIG.register.hello_channel_id}> first.", ephemeral=True)
             except MinecraftAccountNotFound as e:
@@ -111,6 +121,16 @@ class RegisterCog(commands.Cog):
             except AccountLinkError as e:
                 logger.error(f"Error linking account for {discord_member.name} ({discord_member.id}): {str(e)}")
                 await interaction.followup.send("❌ An error occurred while trying to register your account. If this keeps happening please contact our staff team.", ephemeral=True)
+            except discord.Forbidden:
+                await interaction.followup.send(
+                    "You successfully registered the account, but I don't have permission to change the nickname of that user.",
+                    ephemeral=True
+                )
+            except discord.HTTPException:
+                await interaction.followup.send(
+                    "⚠️ Something went wrong while trying to change your nickname. Please try again later.",
+                    ephemeral=True
+                )
             except Exception as e:
                 await interaction.followup.send("❌ An unexpected error occurred while trying to register your account. Please try again later.", ephemeral=True)
                 raise e
@@ -132,7 +152,17 @@ class RegisterCog(commands.Cog):
                 await interaction.followup.send("✅ Successfully updated your Discord nickname!", ephemeral=True)
             except PlayerNotFound:
                 await interaction.followup.send(f"🤔 Hmm. I don't know you, sorry. Try and say `/hello` in <#{CONFIG.register.hello_channel_id}> first.", ephemeral=True)
-            
+            except discord.Forbidden:
+                await interaction.followup.send(
+                    "❌ I don't have permission to change your nickname.",
+                    ephemeral=True
+                )
+            except discord.HTTPException:
+                await interaction.followup.send(
+                    "⚠️ Something went wrong while trying to change your nickname. Please try again later.",
+                    ephemeral=True
+                )
+
     @update.error
     async def on_update_command_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
         if isinstance(error, discord.app_commands.CommandOnCooldown):
