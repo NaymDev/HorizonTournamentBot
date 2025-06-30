@@ -134,7 +134,7 @@ class RegisterCog(commands.Cog):
                 await interaction.followup.send(f"🤔 Hmm. I don't know you, sorry. Try and say `/hello` in <#{CONFIG.register.hello_channel_id}> first.", ephemeral=True)
             
     @update.error
-    async def on_test_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+    async def on_update_command_error(self, interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
         if isinstance(error, discord.app_commands.CommandOnCooldown):
             await interaction.response.send_message(str(error), ephemeral=True)
             
