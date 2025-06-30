@@ -1,3 +1,4 @@
+import time
 import discord
 from discord.ext import commands, tasks
 from discord import app_commands
@@ -79,7 +80,8 @@ class PingCog(commands.Cog):
         img_file = discord.File(io.BytesIO(img_bytes), filename="pinggraph.png")
 
         current_ping = round(self.bot.latency * 1000, 2)
-        timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+        #timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+        timestamp = f"<t:{int(time.time())}:F>"
 
         embed = discord.Embed(
             title="Bot Ping Over Time",
