@@ -71,6 +71,3 @@ class MinecraftAccountService:
             await self.minecraft_repo.update_account(player.id, minecraft_account.minecraft_uuid, username)
             
         await member.edit(nick=username)
-
-# TODO: (next) add a method to ensure the Discord members nick = minecraft username
-# TODO: (next) fetching the Minecraft username from the UUID should be done inside the service layer (aka. inside link_account) and not pased as an arg
