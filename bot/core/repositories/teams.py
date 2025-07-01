@@ -1,7 +1,7 @@
 import datetime
 from aiosqlite import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func, select
+from sqlalchemy import asc, func, select
 from db import models
 
 class TeamRepository:
@@ -74,3 +74,17 @@ class TeamRepository:
         )
         result = await self.session.execute(stmt)
         return result.scalars().all()
+    
+    async def get_earliest_substitute_team(self, tournament_id: int) -> models.Teams | None:
+        """Get the team with the earliest signup_completed_time in the given tournament with status substitute."""
+        stmt = (
+            select(models.Teams)
+            .where(
+                models.Teams.tournament_id == tournament_id,
+                models.Teams.status == models.TeamStatus.substitute
+            )
+            .order_by(asc(models.Teams.signup_completed_time))
+            .limit(1)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
