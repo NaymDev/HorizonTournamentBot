@@ -34,11 +34,14 @@ class SignOffView(discord.ui.View):
                 await interaction.response.send_message("Team not found.", ephemeral=True)
                 return
             
+            old_status = team.status
+            
             team.status = models.TeamStatus.rejected
             await session.commit()
             
-            service = TeamSubstituteService(team_repo, TournamentRepository(session))
-            service.update_teams_status_for_substitute(self.tournament_id)
+            if old_status == models.TeamStatus.accepted:
+                service = TeamSubstituteService(team_repo, TournamentRepository(session))
+                service.update_teams_status_for_substitute(self.tournament_id)
             
             # TODO: Move sign-off logic to service layer
             # => message members
