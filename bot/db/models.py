@@ -18,6 +18,7 @@ class TeamStatus(enum.Enum):
     pending = "pending"
     accepted = "accepted"
     rejected = "rejected"
+    substitute = "substitute"
 
 class MatchStatus(enum.Enum):
     open = "open"
@@ -46,6 +47,8 @@ class Tournaments(Base):
     signup_channel_id = Column(String, nullable=False, unique=True)
     
     signups_locked_reason = Column(String, nullable=True)
+    
+    max_accepted_teams = Column(Integer, default=16)
     
     brackets = relationship("Brackets", back_populates="tournament")
     teams = relationship("Teams", back_populates="tournament")
