@@ -141,7 +141,7 @@ class TeamReactionService:
                      ).set_footer(text="Team Approved as **Substitue**!")
                     )
         await message.clear_reactions()
-        await message.add_reaction("🟢")
+        await message.add_reaction("🟠")
     
     async def _handle_team_rejected(self, message: discord.Message, team_name: str, members_discord_ids: list[str]):
         await message.edit(embed=
@@ -152,4 +152,4 @@ class TeamReactionService:
                      ).set_footer(text="Team Rejected!")
                     )
         await message.clear_reactions()
-        await message.add_reaction("⛔")
+        await message.add_reaction("🔴")
