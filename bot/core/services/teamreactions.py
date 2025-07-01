@@ -52,8 +52,9 @@ class TeamReactionService:
         for reaction in message.reactions:
             emoji = str(reaction.emoji)
             if (
-                ((team_status == models.TeamStatus.accepted or team_status == models.TeamStatus.substitute) and emoji != "🟢") or
-                (team_status == models.TeamStatus.rejected and emoji != "⛔") or
+                (team_status == models.TeamStatus.accepted  and emoji != "🟢") or
+                (team_status == models.TeamStatus.substitute and emoji != "🟠") or
+                (team_status == models.TeamStatus.rejected and emoji != "🔴") or
                 (team_status == models.TeamStatus.pending and emoji not in {"✅", "⛔"})
             ):
                 await message.clear_reaction(reaction.emoji)
@@ -77,9 +78,9 @@ class TeamReactionService:
             case models.TeamStatus.accepted:
                 required_emojis = {"🟢"}
             case models.TeamStatus.substitute:
-                required_emojis = {"🟢"}
+                required_emojis = {"🟠"}
             case models.TeamStatus.rejected:
-                required_emojis = {"⛔"}
+                required_emojis = {"🔴"}
             case models.TeamStatus.pending:
                 required_emojis = {"✅", "⛔"}
             case _:
@@ -136,7 +137,7 @@ class TeamReactionService:
                      discord.Embed(
                          title= team_name,
                          description="\n".join([f"<:pr_enter:1370057653606154260> `👤` <@{user_id}>" for user_id in members_discord_ids]),
-                         color=discord.Color.green()
+                         color=discord.Color.orange()
                      ).set_footer(text="Team Approved as **Substitue**!")
                     )
         await message.clear_reactions()
