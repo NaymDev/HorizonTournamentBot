@@ -11,6 +11,11 @@ class TournamentRepository:
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
     
+    async def get_tournament_by_id(self, tournament_id: int) -> models.Tournaments | None:
+        stmt = select(models.Tournaments).where(models.Tournaments.id == tournament_id)
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+    
     async def get_all_tournaments(self) -> list[models.Tournaments] | None:
         stmt = select(models.Tournaments)
         result = await self.session.execute(stmt)

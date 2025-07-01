@@ -3,6 +3,7 @@ from logging.handlers import RotatingFileHandler
 import discord
 from discord.ext import commands
 
+from bot.core.services.teamsubstitute import TeamSubstituteService
 from core.repositories.tournaments import TournamentRepository
 from db.session import SessionLocal
 from core.repositories.members import MemberRepository
@@ -35,6 +36,9 @@ class SignOffView(discord.ui.View):
             
             team.status = models.TeamStatus.rejected
             await session.commit()
+            
+            service = TeamSubstituteService(team_repo, TournamentRepository(session))
+            service.update_teams_status_for_substitute(self.tournament_id)
             
             # TODO: Move sign-off logic to service layer
             # => message members
