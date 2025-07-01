@@ -124,7 +124,7 @@ class TeamReactionService:
         await message.edit(embed=
                      discord.Embed(
                          title= team_name,
-                         description="\n".join([f"<:pr_enter:1370057653606154260> <@{user_id}>" for user_id in members_discord_ids]),
+                         description="\n".join([f"<:pr_enter:1370057653606154260> `👤` <@{user_id}>" for user_id in members_discord_ids]),
                          color=discord.Color.green()
                      ).set_footer(text="Team Approved!")
                     )
@@ -135,7 +135,7 @@ class TeamReactionService:
         await message.edit(embed=
                      discord.Embed(
                          title= team_name,
-                         description="\n".join([f"<:pr_enter:1370057653606154260> <@{user_id}>" for user_id in members_discord_ids]),
+                         description="\n".join([f"<:pr_enter:1370057653606154260> `👤` <@{user_id}>" for user_id in members_discord_ids]),
                          color=discord.Color.green()
                      ).set_footer(text="Team Approved as **Substitue**!")
                     )
@@ -146,7 +146,7 @@ class TeamReactionService:
         await message.edit(embed=
                      discord.Embed(
                          title= team_name,
-                         description="\n".join([f"<:pr_enter:1370057653606154260> <@{user_id}>" for user_id in members_discord_ids]),
+                         description="\n".join([f"<:pr_enter:1370057653606154260> `👤` <@{user_id}>" for user_id in members_discord_ids]),
                          color=discord.Color.red()
                      ).set_footer(text="Team Rejected!")
                     )
