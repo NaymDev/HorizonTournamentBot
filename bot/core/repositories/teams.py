@@ -30,6 +30,16 @@ class TeamRepository:
             team.status = status
             await self.session.commit()
     
+    async def set_signup_complete_date(self, team_id: int, dt: datetime.datetime):
+        """Set the signup completed date of a team."""
+        stmt = select(models.Teams).where(models.Teams.id == team_id)
+        result = await self.session.execute(stmt)
+        team = result.scalar_one_or_none()
+
+        if team:
+            team.signup_completed_time = dt
+            await self.session.commit()
+    
     async def create_team(self, tournament_id: int, team_name: str, status: models.TeamStatus = models.TeamStatus.pending) -> models.Teams:
         """Create a new team under a tournament with initial status."""
         new_team = models.Teams(

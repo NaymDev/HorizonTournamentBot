@@ -36,6 +36,10 @@ class SignOffView(discord.ui.View):
             team.status = models.TeamStatus.rejected
             await session.commit()
             
+            # TODO: Move sign-off logic to service layer
+            # => message members
+            # => update all other teams status so the first one to get accepted of the substitute gets accepted and notified
+            
             logger.info(f"Team {team.team_name} (ID: {self.team_id}) has signed off from tournament {self.tournament_id} by <@{interaction.user.id}>.")
             
             await interaction.response.edit_message(

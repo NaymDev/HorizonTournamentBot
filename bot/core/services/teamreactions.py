@@ -1,3 +1,4 @@
+import datetime
 import discord
 
 from core.repositories.members import MemberRepository
@@ -102,7 +103,8 @@ class TeamReactionService:
                     await message.remove_reaction(emoji, bot_user)
             else:
                 await message.add_reaction(emoji)
-
+                
+    # DO NOT CALL WHEN TEAM STATUS IS NOT PENDING (will break signup complete date)
     async def _update_team_status(self, team_id, reactions, member_ids, tournament: models.Tournaments) -> models.TeamStatus:
         accepted = all(uid in reactions.get("✅", []) for uid in member_ids)
         denied = any(uid in reactions.get("⛔", []) for uid in member_ids)
@@ -118,6 +120,7 @@ class TeamReactionService:
             status = models.TeamStatus.pending
         
         await self.team_repo.set_status(team_id, status)
+        await self.team_repo.set_signup_complete_date(team_id, datetime.datetime.now(datetime.timezone.utc))
         return status
     
     async def _handle_team_approved(self, message: discord.Message, team_name: str, members_discord_ids: list[str]):

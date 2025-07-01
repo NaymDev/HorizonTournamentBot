@@ -113,6 +113,7 @@ class Teams(Base):
     team_name = Column(String, nullable=False)
     signup_time = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc))
     status = Column(Enum(TeamStatus), default=TeamStatus.pending)
+    signup_completed_time = Column(DateTime, nullable=True)
     
     tournament = relationship("Tournaments", back_populates="teams")
     members = relationship("TeamMembers", back_populates="team")
