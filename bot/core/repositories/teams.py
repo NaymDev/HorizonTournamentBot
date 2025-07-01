@@ -46,3 +46,12 @@ class TeamRepository:
         except IntegrityError:
             await self.session.rollback()
             raise ValueError(f"Team with name '{team_name}' already exists in tournament {tournament_id}.")
+
+    async def get_accepted_team_count(self, tournament_id: int) -> int:
+        """Get the count of accepted teams in a tournament."""
+        stmt = select(models.Teams).where(
+            models.Teams.tournament_id == tournament_id,
+            models.Teams.status == models.TeamStatus.accepted
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().count()

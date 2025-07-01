@@ -40,9 +40,11 @@ class TeamReactionService:
         if team.status != models.TeamStatus.pending:
             return
         
-        match await self._update_team_status(team_id, reactions, members_discord_ids):
+        match await self._update_team_status(team_id, reactions, members_discord_ids, tournament):
             case models.TeamStatus.accepted:
                 await self._handle_team_approved(discord_message, team.team_name, members_discord_ids)
+            case models.TeamStatus.substitute:
+                await self._handle_team_approved_substitute(discord_message, team.team_name, members_discord_ids)
             case models.TeamStatus.rejected:
                 await self._handle_team_rejected(discord_message, team.team_name, members_discord_ids)
 
@@ -50,7 +52,7 @@ class TeamReactionService:
         for reaction in message.reactions:
             emoji = str(reaction.emoji)
             if (
-                (team_status == models.TeamStatus.accepted and emoji != "🟢") or
+                ((team_status == models.TeamStatus.accepted or team_status == models.TeamStatus.substitute) and emoji != "🟢") or
                 (team_status == models.TeamStatus.rejected and emoji != "⛔") or
                 (team_status == models.TeamStatus.pending and emoji not in {"✅", "⛔"})
             ):
@@ -73,6 +75,8 @@ class TeamReactionService:
     async def _ensure_reaction_presence(self, message: discord.Message, team_status):
         match team_status:
             case models.TeamStatus.accepted:
+                required_emojis = {"🟢"}
+            case models.TeamStatus.substitute:
                 required_emojis = {"🟢"}
             case models.TeamStatus.rejected:
                 required_emojis = {"⛔"}
@@ -98,7 +102,7 @@ class TeamReactionService:
             else:
                 await message.add_reaction(emoji)
 
-    async def _update_team_status(self, team_id, reactions, member_ids) -> models.TeamStatus:
+    async def _update_team_status(self, team_id, reactions, member_ids, tournament: models.Tournaments) -> models.TeamStatus:
         accepted = all(uid in reactions.get("✅", []) for uid in member_ids)
         denied = any(uid in reactions.get("⛔", []) for uid in member_ids)
 
@@ -106,7 +110,10 @@ class TeamReactionService:
         if denied:
             status = models.TeamStatus.rejected
         elif accepted:
-            status = models.TeamStatus.accepted
+            if tournament.max_accepted_teams >= await self.team_repo.get_accepted_team_count(tournament.id):
+                status = models.TeamStatus.substitute
+            else:
+                status = models.TeamStatus.accepted
         else:
             status = models.TeamStatus.pending
         
@@ -120,6 +127,17 @@ class TeamReactionService:
                          description="\n".join([f"<:pr_enter:1370057653606154260> <@{user_id}>" for user_id in members_discord_ids]),
                          color=discord.Color.green()
                      ).set_footer(text="Team Approved!")
+                    )
+        await message.clear_reactions()
+        await message.add_reaction("🟢")
+    
+    async def _handle_team_approved_substitute(self, message: discord.Message, team_name: str, members_discord_ids: list[str]):
+        await message.edit(embed=
+                     discord.Embed(
+                         title= team_name,
+                         description="\n".join([f"<:pr_enter:1370057653606154260> <@{user_id}>" for user_id in members_discord_ids]),
+                         color=discord.Color.green()
+                     ).set_footer(text="Team Approved as **Substitue**!")
                     )
         await message.clear_reactions()
         await message.add_reaction("🟢")
