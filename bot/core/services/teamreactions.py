@@ -39,7 +39,7 @@ class TeamReactionService:
         
         if team.status != models.TeamStatus.pending:
             return
-        
+
         match await self._update_team_status(team_id, reactions, members_discord_ids, tournament):
             case models.TeamStatus.accepted:
                 await self._handle_team_approved(discord_message, team.team_name, members_discord_ids)
@@ -106,12 +106,11 @@ class TeamReactionService:
     async def _update_team_status(self, team_id, reactions, member_ids, tournament: models.Tournaments) -> models.TeamStatus:
         accepted = all(uid in reactions.get("✅", []) for uid in member_ids)
         denied = any(uid in reactions.get("⛔", []) for uid in member_ids)
-
         
         if denied:
             status = models.TeamStatus.rejected
         elif accepted:
-            if tournament.max_accepted_teams >= await self.team_repo.get_accepted_team_count(tournament.id):
+            if await self.team_repo.get_accepted_team_count(tournament.id) >= tournament.max_accepted_teams:
                 status = models.TeamStatus.substitute
             else:
                 status = models.TeamStatus.accepted

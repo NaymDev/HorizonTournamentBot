@@ -1,3 +1,5 @@
+import logging
+from logging.handlers import RotatingFileHandler
 import discord
 from discord.ext import commands
 
@@ -7,6 +9,40 @@ from core.repositories.members import MemberRepository
 from core.repositories.players import PlayerRepository
 from core.repositories.teams import TeamRepository
 from db import models
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+handler = RotatingFileHandler('cogs.teammanagemant.log', maxBytes=1000000, backupCount=3)
+formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+class SignOffView(discord.ui.View):
+    def __init__(self, team_id: str, tournament_id: str, cog):
+        super().__init__(timeout=None)
+        self.team_id = team_id
+        self.tournament_id = tournament_id
+        self.cog = cog
+
+    @discord.ui.button(label="Sign Off", style=discord.ButtonStyle.danger, custom_id="sign_off_button")
+    async def sign_off_button(self, interaction: discord.Interaction, button: discord.Button):
+        async with self.cog.session_factory() as session:
+            team_repo = TeamRepository(session)
+            team = await team_repo.get_team_for_team_id(self.team_id)
+            if team is None:
+                await interaction.response.send_message("Team not found.", ephemeral=True)
+                return
+            
+            team.status = models.TeamStatus.rejected
+            await session.commit()
+            
+            logger.info(f"Team {team.team_name} (ID: {self.team_id}) has signed off from tournament {self.tournament_id} by <@{interaction.user.id}>.")
+            
+            await interaction.response.edit_message(
+                content=f"Team '{team.team_name}' has signed off from the tournament.",
+                embed=None,
+                view=None
+            )
 
 class TeamManageCog(commands.Cog):
     def __init__(self, bot: commands.Bot, session_factory):
@@ -76,10 +112,16 @@ class TeamManageCog(commands.Cog):
                 models.TeamStatus.rejected: "Rejected 🔴"
             }.get(team.status, "Unknown")
             
-            await interaction.followup.send(embed=discord.Embed(
+            embed = discord.Embed(
                 title=f"Team Information: {team.team_name}",
                 description="\n".join([f"<:pr_enter:1370057653606154260> `👤` <@{user_id}>" for user_id in members_discord_ids]),
-            ).set_footer(text=f"Status: {status_str}"), ephemeral=True)
+            ).set_footer(text=f"Status: {status_str}")
+
+            if team.status in [models.TeamStatus.accepted, models.TeamStatus.substitute]:
+                view = SignOffView(team_id=team_id, tournament_id=tournament_id, cog=self)
+                await interaction.followup.send(embed=embed, view=view, ephemeral=True)
+            else:
+                await interaction.followup.send(embed=embed, ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(TeamManageCog(bot, SessionLocal))

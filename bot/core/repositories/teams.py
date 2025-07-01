@@ -1,7 +1,7 @@
 import datetime
 from aiosqlite import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import func, select
 from db import models
 
 class TeamRepository:
@@ -49,12 +49,13 @@ class TeamRepository:
 
     async def get_accepted_team_count(self, tournament_id: int) -> int:
         """Get the count of accepted teams in a tournament."""
-        stmt = select(models.Teams).where(
+        stmt = select(func.count()).select_from(models.Teams).where(
             models.Teams.tournament_id == tournament_id,
             models.Teams.status == models.TeamStatus.accepted
         )
         result = await self.session.execute(stmt)
-        return result.scalars().count()
+        count = result.scalar_one()
+        return count
 
     async def get_all_teams_for_tournament(self, tournament_id: int) -> list[models.Teams]:
         """Get the count of accepted teams in a tournament."""
