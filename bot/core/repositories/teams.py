@@ -55,3 +55,11 @@ class TeamRepository:
         )
         result = await self.session.execute(stmt)
         return result.scalars().count()
+
+    async def get_all_teams_for_tournament(self, tournament_id: int) -> list[models.Teams]:
+        """Get the count of accepted teams in a tournament."""
+        stmt = select(models.Teams).where(
+            models.Teams.tournament_id == tournament_id,
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
