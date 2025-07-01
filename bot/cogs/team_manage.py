@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 
-from core.repositories import tournaments
 from core.repositories.tournaments import TournamentRepository
 from db.session import SessionLocal
 from core.repositories.members import MemberRepository
