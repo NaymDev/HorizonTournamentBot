@@ -1,6 +1,7 @@
 import datetime
 import discord
 
+from core.services.dm_notification import DiscordGroup, DmNotificationService, ModelTeamMembersGroup
 from core.repositories.members import MemberRepository
 from core.repositories.players import PlayerRepository
 from core.repositories.tournaments import TournamentRepository
@@ -9,12 +10,13 @@ from core.repositories.teams import TeamRepository
 from db import models
 
 class TeamReactionService:
-    def __init__(self, team_repo: TeamRepository, msg_repo: MessageRepository, member_repo: MemberRepository, tournament_repo: TournamentRepository, player_repo: PlayerRepository):
+    def __init__(self, team_repo: TeamRepository, msg_repo: MessageRepository, member_repo: MemberRepository, tournament_repo: TournamentRepository, player_repo: PlayerRepository, dm_notifications_service: DmNotificationService):
         self.team_repo: TeamRepository = team_repo
         self.msg_repo: MessageRepository = msg_repo
         self.member_repo: MemberRepository = member_repo
         self.tournament_repo: TournamentRepository = tournament_repo
         self.player_repo: PlayerRepository = player_repo
+        self.dm_notifications_service: DmNotificationService = dm_notifications_service
 
     async def handle_signup_reaction_check(self, discord_message):
         msg_model: models.Messages = await self.msg_repo.get_by_discord_message_id(discord_message.id)
@@ -47,7 +49,7 @@ class TeamReactionService:
             case models.TeamStatus.substitute:
                 await self._handle_team_approved_substitute(discord_message, team.team_name, members_discord_ids)
             case models.TeamStatus.rejected:
-                await self._handle_team_rejected(discord_message, team.team_name, members_discord_ids)
+                await self._handle_team_rejected(discord_message, team.team_name, members_discord_ids, [uid for uid in members_discord_ids if uid in reactions.get("⛔", [])])
 
     async def _clean_invalid_reactions(self, message, member_ids, team_status):
         for reaction in message.reactions:
@@ -133,6 +135,10 @@ class TeamReactionService:
                     )
         await message.clear_reactions()
         await message.add_reaction("🟢")
+        await self.dm_notifications_service.notify(
+            DiscordGroup(members_discord_ids),
+            self.dm_notifications_service.message_accept
+        )
     
     async def _handle_team_approved_substitute(self, message: discord.Message, team_name: str, members_discord_ids: list[str]):
         await message.edit(embed=
@@ -144,8 +150,12 @@ class TeamReactionService:
                     )
         await message.clear_reactions()
         await message.add_reaction("🟠")
+        await self.dm_notifications_service.notify(
+            DiscordGroup(members_discord_ids),
+            self.dm_notifications_service.message_accept_as_substitute
+        )
     
-    async def _handle_team_rejected(self, message: discord.Message, team_name: str, members_discord_ids: list[str]):
+    async def _handle_team_rejected(self, message: discord.Message, team_name: str, members_discord_ids: list[str], rejected_by: list[discord.Member]):
         await message.edit(embed=
                      discord.Embed(
                          title= team_name,
@@ -155,3 +165,8 @@ class TeamReactionService:
                     )
         await message.clear_reactions()
         await message.add_reaction("🔴")
+        await self.dm_notifications_service.notify(
+            DiscordGroup(members_discord_ids),
+            self.dm_notifications_service.message_rejected_by,
+            rejected_by=rejected_by
+        )

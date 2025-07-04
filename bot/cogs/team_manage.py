@@ -3,7 +3,8 @@ from logging.handlers import RotatingFileHandler
 import discord
 from discord.ext import commands
 
-from bot.core.services.teamsubstitute import TeamSubstituteService
+from core.services.dm_notification import DmNotificationService, ModelTeamMembersGroup
+from core.services.teamsubstitute import TeamSubstituteService
 from core.repositories.tournaments import TournamentRepository
 from db.session import SessionLocal
 from core.repositories.members import MemberRepository
@@ -34,18 +35,32 @@ class SignOffView(discord.ui.View):
                 await interaction.response.send_message("Team not found.", ephemeral=True)
                 return
             
+            if team.status == models.TeamStatus.rejected:
+                await interaction.response.edit_message(
+                    content=f"Team '{team.team_name}'  has already signed off.",
+                    embed=None,
+                    view=None
+                )
+                return
+            
             old_status = team.status
             
             team.status = models.TeamStatus.rejected
             await session.commit()
             
+            dm_notifications_service = DmNotificationService(self.cog.bot)
+            
             if old_status == models.TeamStatus.accepted:
-                service = TeamSubstituteService(team_repo, TournamentRepository(session))
+                service = TeamSubstituteService(team_repo, TournamentRepository(session), PlayerRepository(session), dm_notifications_service)
                 service.update_teams_status_for_substitute(self.tournament_id)
             
+            await dm_notifications_service.notify(
+                await ModelTeamMembersGroup.create(team.members, self.player_repo),
+                dm_notifications_service.message_cancelled,
+                reason=f"A staff member has signed off the team '{team.team_name}' from the tournament `{self.tournament_id}`."
+            )
+                            
             # TODO: Move sign-off logic to service layer
-            # => message members
-            # => update all other teams status so the first one to get accepted of the substitute gets accepted and notified
             
             logger.info(f"Team {team.team_name} (ID: {self.team_id}) has signed off from tournament {self.tournament_id} by <@{interaction.user.id}>.")
             

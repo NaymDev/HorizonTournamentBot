@@ -1,5 +1,7 @@
 import logging
 from logging.handlers import RotatingFileHandler
+from core.repositories.players import PlayerRepository
+from core.services.dm_notification import DmNotificationService, ModelTeamMembersGroup
 from core.repositories.tournaments import TournamentRepository
 from db import models
 from core.repositories.teams import TeamRepository
@@ -12,9 +14,11 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 class TeamSubstituteService:
-    def __init__(self, team_repo: TeamRepository, tournament_repo: TournamentRepository):
+    def __init__(self, team_repo: TeamRepository, tournament_repo: TournamentRepository, player_repo: PlayerRepository, dm_notifications_service: DmNotificationService):
         self.team_repo: TeamRepository = team_repo
         self.tournament_repo: TournamentRepository = tournament_repo
+        self.player_repo: PlayerRepository = player_repo
+        self.dm_notifications_service: DmNotificationService = dm_notifications_service
     
     async def update_teams_status_for_substitute(self, tournament_id: int):
         """
@@ -42,3 +46,8 @@ class TeamSubstituteService:
             
             logger.info(f"Accepting substitute team_id={team.id} for tournament_id={tournament_id}")
             self.team_repo.set_status(team.id, models.TeamStatus.accepted)
+            
+            await self.dm_notifications_service.notify(
+                await ModelTeamMembersGroup.create(team.members, self.player_repo),
+                self.dm_notifications_service.message_substitue_accept
+            )
