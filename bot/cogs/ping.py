@@ -28,6 +28,7 @@ class PingCog(commands.Cog):
         await self.bot.wait_until_ready()
 
     @app_commands.command(name="ping", description="checks if bot is lagging or if the bot is down")
+    @app_commands.default_permissions(administrator=True)
     async def ping(self, interaction: discord.Interaction):
         await interaction.response.defer(thinking=True, ephemeral=True)
         
