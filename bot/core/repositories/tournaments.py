@@ -21,3 +21,10 @@ class TournamentRepository:
         result = await self.session.execute(stmt)
         tournaments = result.scalars().all()
         return tournaments if tournaments else None
+
+    async def create_tournament(self, tournament_data: dict) -> models.Tournaments:
+        tournament = models.Tournaments(**tournament_data)
+        self.session.add(tournament)
+        await self.session.commit()
+        await self.session.refresh(tournament)
+        return tournament
