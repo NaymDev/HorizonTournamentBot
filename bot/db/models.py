@@ -50,6 +50,8 @@ class Tournaments(Base):
     
     max_accepted_teams = Column(Integer, default=16)
     
+    challonge_tournament_id = Column(String, nullable=True)
+    
     brackets = relationship("Brackets", back_populates="tournament")
     teams = relationship("Teams", back_populates="tournament")
 
@@ -114,6 +116,8 @@ class Teams(Base):
     signup_time = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc))
     status = Column(Enum(TeamStatus), default=TeamStatus.pending)
     signup_completed_time = Column(DateTime, nullable=True)
+    
+    challonge_team_id = Column(String, nullable=True)
     
     tournament = relationship("Tournaments", back_populates="teams")
     members = relationship("TeamMembers", back_populates="team")

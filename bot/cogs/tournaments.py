@@ -63,6 +63,7 @@ class TournamentCog(commands.Cog):
                     f"• Start Date: <t:{int(start_dt.timestamp())}:F>\n"
                     f"• Signup Channel: {signup_channel.mention}\n"
                     f"• Max Teams: {max_accepted_teams}",
+                    f"• Challonge tournament: https://challonge.com/{tournament.challonge_tournament_id}",
                     ephemeral=True
                 )
 

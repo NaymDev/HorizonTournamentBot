@@ -1,6 +1,7 @@
 import datetime
 import discord
 
+from challonge.client import ChallongeClient
 from core.services.dm_notification import DiscordGroup, DmNotificationService, ModelTeamMembersGroup
 from core.repositories.members import MemberRepository
 from core.repositories.players import PlayerRepository
@@ -10,13 +11,14 @@ from core.repositories.teams import TeamRepository
 from db import models
 
 class TeamReactionService:
-    def __init__(self, team_repo: TeamRepository, msg_repo: MessageRepository, member_repo: MemberRepository, tournament_repo: TournamentRepository, player_repo: PlayerRepository, dm_notifications_service: DmNotificationService):
+    def __init__(self, team_repo: TeamRepository, msg_repo: MessageRepository, member_repo: MemberRepository, tournament_repo: TournamentRepository, player_repo: PlayerRepository, dm_notifications_service: DmNotificationService, challonge_client: ChallongeClient):
         self.team_repo: TeamRepository = team_repo
         self.msg_repo: MessageRepository = msg_repo
         self.member_repo: MemberRepository = member_repo
         self.tournament_repo: TournamentRepository = tournament_repo
         self.player_repo: PlayerRepository = player_repo
         self.dm_notifications_service: DmNotificationService = dm_notifications_service
+        self.challonge_client: ChallongeClient = challonge_client
 
     async def handle_signup_reaction_check(self, discord_message):
         msg_model: models.Messages = await self.msg_repo.get_by_discord_message_id(discord_message.id)
@@ -45,9 +47,9 @@ class TeamReactionService:
 
         match await self._update_team_status(team_id, reactions, members_discord_ids, tournament):
             case models.TeamStatus.accepted:
-                await self._handle_team_approved(discord_message, team.team_name, members_discord_ids)
+                await self._handle_team_approved(discord_message, team, members_discord_ids, tournament)
             case models.TeamStatus.substitute:
-                await self._handle_team_approved_substitute(discord_message, team.team_name, members_discord_ids)
+                await self._handle_team_approved_substitute(discord_message, team, members_discord_ids, tournament)
             case models.TeamStatus.rejected:
                 await self._handle_team_rejected(discord_message, team.team_name, members_discord_ids, [uid for uid in members_discord_ids if uid in reactions.get("⛔", [])])
 
@@ -125,10 +127,10 @@ class TeamReactionService:
         await self.team_repo.set_signup_complete_date(team_id, datetime.datetime.now(datetime.timezone.utc))
         return status
     
-    async def _handle_team_approved(self, message: discord.Message, team_name: str, members_discord_ids: list[str]):
+    async def _handle_team_approved(self, message: discord.Message, team: models.Teams, members_discord_ids: list[str], tournament: models.Tournaments):
         await message.edit(embed=
                      discord.Embed(
-                         title= team_name,
+                         title= team.team_name,
                          description="\n".join([f"<:pr_enter:1370057653606154260> `👤` <@{user_id}>" for user_id in members_discord_ids]),
                          color=discord.Color.green()
                      ).set_footer(text="Team Approved!")
@@ -139,11 +141,15 @@ class TeamReactionService:
             DiscordGroup(members_discord_ids),
             self.dm_notifications_service.message_accept
         )
+        if tournament.challonge_tournament_id:  
+            response = self.challonge_client.add_participant(tournament.challonge_tournament_id, team.team_name, f"{message.jump_url}")
+            self.team_repo.set_challonge_team_id(team.id, response["id"])
+            self.challonge_client.check_in_participant(tournament.challonge_tournament_id, response["id"])
     
-    async def _handle_team_approved_substitute(self, message: discord.Message, team_name: str, members_discord_ids: list[str]):
+    async def _handle_team_approved_substitute(self, message: discord.Message, team: models.Teams, members_discord_ids: list[str], tournament: models.Tournaments):
         await message.edit(embed=
                      discord.Embed(
-                         title= team_name,
+                         title= team.team_name,
                          description="\n".join([f"<:pr_enter:1370057653606154260> `👤` <@{user_id}>" for user_id in members_discord_ids]),
                          color=discord.Color.orange()
                      ).set_footer(text="Team Approved as **Substitue**!")
@@ -154,6 +160,9 @@ class TeamReactionService:
             DiscordGroup(members_discord_ids),
             self.dm_notifications_service.message_accept_as_substitute
         )
+        if tournament.challonge_tournament_id:
+            response = self.challonge_client.add_participant(tournament.challonge_tournament_id, team.team_name, f"{message.jump_url}")
+            self.team_repo.set_challonge_team_id(team.id, response["id"])
     
     async def _handle_team_rejected(self, message: discord.Message, team_name: str, members_discord_ids: list[str], rejected_by: list[discord.Member]):
         await message.edit(embed=

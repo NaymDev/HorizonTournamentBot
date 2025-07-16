@@ -88,3 +88,12 @@ class TeamRepository:
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
+    
+    async def set_challonge_team_id(self, team_id: int, challonge_team_id: str):
+        stmt = select(models.Teams).where(models.Teams.id == team_id)
+        result = await self.session.execute(stmt)
+        team = result.scalar_one_or_none()
+
+        if team:
+            team.challonge_team_id = challonge_team_id
+            await self.session.commit()

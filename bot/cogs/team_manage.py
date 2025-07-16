@@ -3,6 +3,8 @@ from logging.handlers import RotatingFileHandler
 import discord
 from discord.ext import commands
 
+from challonge.client import ChallongeClient
+from config import CONFIG
 from core.services.dm_notification import DmNotificationService, ModelTeamMembersGroup
 from core.services.teamsubstitute import TeamSubstituteService
 from core.repositories.tournaments import TournamentRepository
@@ -50,9 +52,15 @@ class SignOffView(discord.ui.View):
             
             dm_notifications_service = DmNotificationService(self.cog.bot)
             
+            challonge_client = ChallongeClient(CONFIG.challonge.api_key)
+            
             if old_status == models.TeamStatus.accepted:
-                service = TeamSubstituteService(team_repo, TournamentRepository(session), PlayerRepository(session), dm_notifications_service)
+                service = TeamSubstituteService(team_repo, TournamentRepository(session), PlayerRepository(session), dm_notifications_service, challonge_client)
                 service.update_teams_status_for_substitute(self.tournament_id)
+            
+            tournament_repo = TournamentRepository(session)
+            tournament = await tournament_repo.get_tournament_by_id(self.tournament_id)
+            challonge_client.check_out_participant(tournament.challonge_tournament_id, team.challonge_team_id)
             
             await dm_notifications_service.notify(
                 await ModelTeamMembersGroup.create(team.members, self.player_repo),

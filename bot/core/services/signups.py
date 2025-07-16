@@ -1,6 +1,7 @@
 from typing import Awaitable, Callable
 
 import discord
+from challonge.client import ChallongeClient
 from core.repositories.members import MemberRepository
 from core.repositories.messages import MessageRepository
 from core.repositories.minecraft import MinecraftRepository
@@ -46,13 +47,14 @@ class PlayerAlreadyInATeam(SignupError):
         self.player = player
 
 class SignupService:
-    def __init__(self, tournament_repo: TournamentRepository, team_repo: TeamRepository, player_repo: PlayerRepository, minecraft_repo: MinecraftRepository, message_repo: MessageRepository, member_repo: MemberRepository):
+    def __init__(self, tournament_repo: TournamentRepository, team_repo: TeamRepository, player_repo: PlayerRepository, minecraft_repo: MinecraftRepository, message_repo: MessageRepository, member_repo: MemberRepository, challonge_client: ChallongeClient):
         self.tournament_repo: TournamentRepository = tournament_repo
         self.team_repo: TeamRepository = team_repo
         self.player_repo: PlayerRepository = player_repo
         self.minecraft_repo: MinecraftRepository = minecraft_repo
         self.message_repo: MessageRepository = message_repo
         self.member_repo: MemberRepository = member_repo
+        self.challonge_client: ChallongeClient = challonge_client
     
     async def signup_team(self, channel_id: str, team_name, members, message_send: Callable[[str, list[int]], Awaitable[discord.Message]]) -> discord.Message:
         tournament = await self.tournament_repo.get_tournament_for_signup_channel_id(channel_id)
