@@ -1,3 +1,4 @@
+import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -37,3 +38,58 @@ class PlayerRepository:
         except SQLAlchemyError:
             await self.session.rollback()
             return None
+    
+    async def is_player_banned(self, discord_user_id: str) -> bool:
+        """Check if the player is banned by Discord user ID."""
+        try:
+            stmt = select(models.Bans).where(
+                models.Bans.type == models.BanType.discord_user,
+                models.Bans.discord_user_id == discord_user_id,
+                (
+                    models.Bans.expires_at == None
+                    | (models.Bans.expires_at > datetime.datetime.now(datetime.timezone.utc))
+                )
+            )
+            result = await self.session.execute(stmt)
+            ban = result.scalars().first()
+            return ban is not None
+        except SQLAlchemyError:
+            return False
+    
+    async def ban_discord_user(session, discord_user_id: str, reason: str, expires_at: datetime.datetime | None = None) -> bool:
+        """Ban a player by their Discord user ID. Updates expired bans."""
+        try:
+            stmt = select(models.Bans).where(
+                models.Bans.type == models.BanType.discord_user,
+                models.Bans.discord_user_id == discord_user_id
+            )
+            result = await session.execute(stmt)
+            existing_ban = result.scalars().first()
+    
+            now = datetime.datetime.now(datetime.timezone.utc)
+    
+            if existing_ban:
+                # If ban is still active, don't re-ban
+                if existing_ban.expires_at is None or existing_ban.expires_at > now:
+                    return False
+    
+                # Update expired ban
+                existing_ban.reason = reason
+                existing_ban.expires_at = expires_at
+                existing_ban.banned_at = now
+                await session.commit()
+                return True
+    
+            # No ban exists; create new one
+            new_ban = models.Bans(
+                type=models.BanType.discord_user,
+                discord_user_id=discord_user_id,
+                reason=reason,
+                expires_at=expires_at
+            )
+            session.add(new_ban)
+            await session.commit()
+            return True
+        except SQLAlchemyError:
+            await session.rollback()
+            return False

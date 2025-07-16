@@ -37,6 +37,10 @@ class PlayerRole(enum.Enum):
     member = "member"
     substitute = "substitute"
 
+class BanType(enum.Enum):
+    discord_user = "discord_user"
+    minecraft_account = "minecraft_account"
+
 class Tournaments(Base):
     __tablename__ = 'tournaments'
     id = Column(Integer, primary_key=True)
@@ -178,3 +182,18 @@ class Substitutions(Base):
     timestamp = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc))
     
     team = relationship("Teams", back_populates="substitutions")
+
+class Bans(Base):
+    __tablename__ = 'bans'
+    id = Column(Integer, primary_key=True)
+    type = Column(Enum(BanType), nullable=False)
+    discord_user_id = Column(String, nullable=True)
+    minecraft_uuid = Column(String, nullable=True)
+    reason = Column(String, nullable=False)
+    banned_at = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc))
+    expires_at = Column(DateTime, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint('type', 'discord_user_id', name='uix_discord_ban'),
+        UniqueConstraint('type', 'minecraft_uuid', name='uix_minecraft_ban'),
+    )

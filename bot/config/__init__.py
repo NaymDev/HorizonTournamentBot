@@ -22,12 +22,16 @@ class HypixelConfig(BaseConfig):
     placeholder: str = ConfigField(readonly=True) # The sub config (HypixelConfig) will be None without this
     api_key: str = ConfigField(sensitive=True, env_var="HYPIXEL_API_KEY", readonly=True)
 
+class ChallongeConfig(BaseConfig):
+    api_key: str = ConfigField(sensitive=True, env_var="CHALLONGE_API_KEY", readonly=True)
+
 class HorizonBotConfig(BaseConfig):
     database: DBConfig = ConfigField()
     signups: SignupConfig = ConfigField()
     issues: GithubIssuesConfig = ConfigField()
     register: RegisterConfig = ConfigField()
     hypixel: HypixelConfig = ConfigField()
+    challonge: ChallongeConfig = ConfigField()
     version: str = ConfigField(readonly=True)
 
 CONFIG: HorizonBotConfig = HorizonBotConfig.from_json("./config.json")

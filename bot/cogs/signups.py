@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
+from challonge.client import ChallongeClient
 from core.repositories.members import MemberRepository
 from db import models
 from core.repositories.minecraft import MinecraftRepository
@@ -41,7 +42,8 @@ class SignupCog(commands.Cog):
             tournament_repo = TournamentRepository(session)
             member_repo = MemberRepository(session)
             player_repo = PlayerRepository(session)
-            service = TeamReactionService(team_repo, message_repo, member_repo, tournament_repo, player_repo)
+            challonge_client = ChallongeClient(CONFIG.challonge.api_key)
+            service = TeamReactionService(team_repo, message_repo, member_repo, tournament_repo, player_repo, challonge_client)
             
             signup_messages = await message_repo.get_all_signup_messages()
             for msg in signup_messages:
