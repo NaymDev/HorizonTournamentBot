@@ -3,7 +3,7 @@ import requests
 class ChallongeClient:
     BASE_URL = "https://api.challonge.com/v1"
 
-    def __init__(self, api_key: str, username: str):
+    def __init__(self, api_key: str, username: str = "horizon_bot"):
         self.api_key = api_key
         self.username = username
         self.auth = (self.username, self.api_key)

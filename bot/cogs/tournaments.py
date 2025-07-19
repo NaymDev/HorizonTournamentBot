@@ -5,6 +5,8 @@ from discord import app_commands
 import datetime
 import logging
 
+from challonge.client import ChallongeClient
+from config import CONFIG
 from db.session import SessionLocal
 from core.repositories.tournaments import TournamentRepository
 from core.services.tournaments import TournamentService, TournamentCreationError, DuplicateSignupChannelError
@@ -49,7 +51,8 @@ class TournamentCog(commands.Cog):
 
             async with self.session_factory() as session:
                 tournament_repo = TournamentRepository(session)
-                tournament_service = TournamentService(tournament_repo)
+                challonge_client = ChallongeClient(CONFIG.challonge.api_key)
+                tournament_service = TournamentService(tournament_repo, challonge_client)
 
                 tournament = await tournament_service.create_tournament(
                     name=name,

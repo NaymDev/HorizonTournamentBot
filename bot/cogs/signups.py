@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
+from core.services.dm_notification import DmNotificationService
 from challonge.client import ChallongeClient
 from core.repositories.members import MemberRepository
 from db import models
@@ -43,7 +44,7 @@ class SignupCog(commands.Cog):
             member_repo = MemberRepository(session)
             player_repo = PlayerRepository(session)
             challonge_client = ChallongeClient(CONFIG.challonge.api_key)
-            service = TeamReactionService(team_repo, message_repo, member_repo, tournament_repo, player_repo, challonge_client)
+            service = TeamReactionService(team_repo, message_repo, member_repo, tournament_repo, player_repo, DmNotificationService(self.bot), challonge_client)
             
             signup_messages = await message_repo.get_all_signup_messages()
             for msg in signup_messages:

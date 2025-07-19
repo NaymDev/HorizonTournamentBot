@@ -22,3 +22,8 @@ class HorizonBot(commands.Bot):
 
         for cog_path in folder.glob("*.py"):
             await self.load_extension(f"cogs.{cog_path.stem}")
+
+#       TODO:                                                                           #
+#       - fetch/use brackets from challonge                                             #
+#       - add ban method in service layer which will check teams, signups, etc.         #
+#       - ban command using the according service layer                                 #
