@@ -19,11 +19,11 @@ class RegisterConfig(BaseConfig):
     hello_messages: list[str] = ConfigField()
 
 class HypixelConfig(BaseConfig):
-    placeholder: str = ConfigField(readonly=True) # The sub config (HypixelConfig) will be None without this
+    _placeholder: int = ConfigField(readonly=True) # The sub config (HypixelConfig) will be None without this
     api_key: str = ConfigField(sensitive=True, env_var="HYPIXEL_API_KEY", readonly=True)
 
 class ChallongeConfig(BaseConfig):
-    _placeholder: str = ConfigField(readonly=True) # The sub config (HypixelConfig) will be None without this
+    _placeholder: int = ConfigField(readonly=True) # The sub config (ChallongeConfig) will be None without this
     api_key: str = ConfigField(sensitive=True, env_var="CHALLONGE_API_KEY", readonly=True)
 
 class HorizonBotConfig(BaseConfig):

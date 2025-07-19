@@ -25,7 +25,10 @@
         ]
     },
     "hypixel": {
-        "placeholder":"placeholder"
+        "_placeholder":0
+    },
+    "challonge": {
+        "_placeholder":0
     },
     "version": "b0.1"
 }
