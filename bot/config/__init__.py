@@ -1,3 +1,4 @@
+from dotenv import load_dotenv
 from velinconfig import BaseConfig, ConfigField
     
 class DBConfig(BaseConfig):
@@ -35,4 +36,5 @@ class HorizonBotConfig(BaseConfig):
     challonge: ChallongeConfig = ConfigField()
     version: str = ConfigField(readonly=True)
 
+load_dotenv(dotenv_path=".env", override=True)
 CONFIG: HorizonBotConfig = HorizonBotConfig.from_json("./config.json")

@@ -1,12 +1,12 @@
 import os
-from dotenv import find_dotenv, load_dotenv
+from dotenv import load_dotenv
 from bot import HorizonBot
 import asyncio
 from db import session
 
 load_dotenv(dotenv_path=".env", override=True)
 
-import config       # load config  # noqa: E402, F401
+import config  # noqa: E402, F401
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 if not DISCORD_TOKEN:

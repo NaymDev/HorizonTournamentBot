@@ -202,5 +202,5 @@ class SignupCog(commands.Cog):
 async def setup(bot):
     if CONFIG.signups.signup_channel_id is None:
         logger.warning("SignupCog not loaded: signup_channel_id is not set.")
-        raise commands.ExtensionFailed("Signup channel ID not set in config.")
+        raise commands.ExtensionFailed("SignupCog", "Signup channel ID not set in config.")
     await bot.add_cog(SignupCog(bot, SessionLocal))

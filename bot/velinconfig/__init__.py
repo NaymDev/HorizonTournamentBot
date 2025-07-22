@@ -38,6 +38,7 @@ class BaseConfig(metaclass=ConfigMeta):
     def _load_env(self):
         for key, (typ, field) in self.__fields__.items():
             if field.env_var and field.env_var in os.environ:
+                print(f"Loading environment variable for {key}: {field.env_var}")
                 val = os.environ[field.env_var]
                 val = self._convert_type(val, typ)
                 setattr(self, key, val)

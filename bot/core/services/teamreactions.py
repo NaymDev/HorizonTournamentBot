@@ -142,7 +142,7 @@ class TeamReactionService:
             self.dm_notifications_service.message_accept
         )
         if tournament.challonge_tournament_id:  
-            response = self.challonge_client.add_participant(tournament.challonge_tournament_id, team.team_name, f"{message.jump_url}")
+            response = self.challonge_client.add_participant(tournament.challonge_tournament_id, team.team_name, f"{message.jump_url}")["participant"]
             self.team_repo.set_challonge_team_id(team.id, response["id"])
             self.challonge_client.check_in_participant(tournament.challonge_tournament_id, response["id"])
     
@@ -161,7 +161,7 @@ class TeamReactionService:
             self.dm_notifications_service.message_accept_as_substitute
         )
         if tournament.challonge_tournament_id:
-            response = self.challonge_client.add_participant(tournament.challonge_tournament_id, team.team_name, f"{message.jump_url}")
+            response = self.challonge_client.add_participant(tournament.challonge_tournament_id, team.team_name, f"{message.jump_url}")["participant"]
             self.team_repo.set_challonge_team_id(team.id, response["id"])
     
     async def _handle_team_rejected(self, message: discord.Message, team_name: str, members_discord_ids: list[str], rejected_by: list[discord.Member]):

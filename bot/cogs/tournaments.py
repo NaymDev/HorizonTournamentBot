@@ -46,7 +46,7 @@ class TournamentCog(commands.Cog):
                 start_dt = datetime.datetime.strptime(start_date, "%Y-%m-%d %H:%M")
                 start_dt = start_dt.replace(tzinfo=datetime.timezone.utc)
             except ValueError:
-                await interaction.followup.send("❌ Invalid date format. Please use `YYYY-MM-DD HH:MM`.", ephemeral=True)
+                await interaction.followup.send(content="❌ Invalid date format. Please use `YYYY-MM-DD HH:MM`.", ephemeral=True)
                 return
 
             async with self.session_factory() as session:
@@ -61,24 +61,26 @@ class TournamentCog(commands.Cog):
                     max_accepted_teams=max_accepted_teams
                 )
 
-                await interaction.followup.send(
-                    f"✅ Tournament **{tournament.name}** created!\n"
-                    f"• Start Date: <t:{int(start_dt.timestamp())}:F>\n"
-                    f"• Signup Channel: {signup_channel.mention}\n"
-                    f"• Max Teams: {max_accepted_teams}",
-                    f"• Challonge tournament: https://challonge.com/{tournament.challonge_tournament_id}",
-                    ephemeral=True
-                )
+                message_content = f"""✅ Tournament **{tournament.name}** created!
+                • Start Date: <t:{int(start_dt.timestamp())}:F>
+                • Signup Channel: {signup_channel.mention}
+                • Max Teams: {max_accepted_teams}
+                • Challonge tournament: https://challonge.com/{tournament.challonge_tournament_id}"""
+
+                await interaction.followup.send(content=message_content, ephemeral=True)
 
         except DuplicateSignupChannelError:
-            await interaction.followup.send(f"❌ A tournament already uses that signup channel ({signup_channel.jump_url}).", ephemeral=True)
+            await interaction.followup.send(content=f"❌ A tournament already uses that signup channel ({signup_channel.jump_url}).", ephemeral=True)
         except TournamentCreationError as e:
             logger.exception("Tournament creation failed")
-            await interaction.followup.send(f"❌ Failed to create tournament: {str(e)}", ephemeral=True)
+            await interaction.followup.send(content=f"❌ Failed to create tournament: {str(e)}", ephemeral=True)
         except Exception as e:
             logger.exception("Unexpected error during tournament creation")
-            await interaction.followup.send("❌ Unexpected error while creating the tournament.", ephemeral=True)
+            await interaction.followup.send(content="❌ Unexpected error while creating the tournament.", ephemeral=True)
             raise e
 
 async def setup(bot: commands.Bot):
+    if CONFIG.challonge.api_key is None:
+        logger.warning("TournamentCog not loaded: challonge api_key is not set.")
+        raise commands.ExtensionFailed("TournamentCog", "Challonge API Key is not set.")
     await bot.add_cog(TournamentCog(bot, SessionLocal))

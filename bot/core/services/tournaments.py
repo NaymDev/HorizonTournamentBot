@@ -21,8 +21,8 @@ class TournamentService:
         if existing:
             raise DuplicateSignupChannelError(signup_channel_id)
 
-        response = self.challonge_client.create_tournament(name, uuid4().hex)
-        
+        response = self.challonge_client.create_tournament(name, uuid4().hex, max_accepted_teams)["tournament"]
+        print(response)
         tournament_data = {
             "name": name,
             "start_date": start_date,
