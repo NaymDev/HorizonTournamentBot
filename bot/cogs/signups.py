@@ -14,7 +14,7 @@ from config import CONFIG
 from core.repositories.messages import MessageRepository
 from core.repositories.teams import TeamRepository
 from core.repositories.tournaments import TournamentRepository
-from core.services.signups import DuplicateTeamMemberError, PlayerAlreadyInATeam, SignupClosed, SignupError, SignupService, TeamNameTaken, TeamNameTooLong, TournamentNotFound, UnregisteredPlayersError
+from core.services.signups import TEAM_NAME_MAX_LENGTH, DuplicateTeamMemberError, PlayerAlreadyInATeam, SignupClosed, SignupError, SignupService, TeamNameTaken, TeamNameTooLong, TournamentNotFound, UnregisteredPlayersError
 from core.services.teamreactions import TeamReactionService
 from db.session import SessionLocal
 
@@ -57,7 +57,7 @@ class SignupCog(commands.Cog):
         description="Register your team",
     )
     @app_commands.describe(
-        team_name="Your team’s name (≤20 chars)",
+        team_name=f"Your team’s name (≤{TEAM_NAME_MAX_LENGTH} chars)",
         p1="Team member 1 (must be verified)",
         p2="Team member 2 (must be verified)",
         p3="Team member 3 (must be verified)",
