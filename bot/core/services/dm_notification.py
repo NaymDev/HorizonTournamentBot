@@ -62,7 +62,7 @@ class DmNotificationService:
     async def message_rejected_by(self, channel: discord.DMChannel, rejected_by: list[discord.Member]):
         names = ', '.join(member.display_name for member in rejected_by)
         await channel.send(
-            f"❌ Unfortunately, your team registration was **rejected** by the following staff members: {names}. "
+            f"❌ Unfortunately, your team registration was **rejected** by the following member(s): {names}. "
             "Please feel free to contact us if you have questions or need clarification."
         )
     
