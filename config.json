@@ -1,6 +1,6 @@
 {
     "database": {
-        "uri": "sqlite+aiosqlite:///main.db"
+        "uri": "sqlite+aiosqlite:///persistent/main.db"
     },
     "signups": {
         "signup_channel_id": 1360805842777145424
