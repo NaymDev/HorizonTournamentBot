@@ -41,21 +41,35 @@ class DmNotificationService:
         self.bot = bot
     
     async def message_accept(self, channel: discord.DMChannel):
-        await channel.send()
-    
+        await channel.send(
+            "✅ Congratulations! Your team has been **accepted** into the tournament. "
+            "Get ready to compete! 🎉"
+        )
+        
     # Called when a team gets accepted but only as a substitute because the tournament has reached the maxmimum amount of accepted teams
     async def message_accept_as_substitute(self, channel: discord.DMChannel):
-        await channel.send()
+        await channel.send(
+            "⚠️ Your team has been placed on the **substitute list** because the tournament is currently full. "
+            "If a slot becomes available, we'll notify you immediately."
+        )
     
     # Called when a substitute team gets accepted (eg because another team cancels and theres a new slot availabel)
     async def message_substitue_accept(self, channel: discord.DMChannel):
-        await channel.send()
+        await channel.send(
+            "🎉 Good news! A slot has opened up, and your team has been **moved from the substitute list to officially accepted** in the tournament!"
+        )
     
     async def message_rejected_by(self, channel: discord.DMChannel, rejected_by: list[discord.Member]):
-        await channel.send()
+        names = ', '.join(member.display_name for member in rejected_by)
+        await channel.send(
+            f"❌ Unfortunately, your team registration was **rejected** by the following staff members: {names}. "
+            "Please feel free to contact us if you have questions or need clarification."
+        )
     
     async def message_cancelled(self, channel: discord.DMChannel, reason: str):
-        await channel.send()
+        await channel.send(
+            f"📪 Your team registration has been **cancelled**.\n**Reason**: {reason}"
+        )
     
     async def notify(self, target: MessageTargetGroupe, message_send_func: Callable[[discord.DMChannel], Awaitable[None]], **kwargs):
         for discord_id in target.get_target_discord_ids():
