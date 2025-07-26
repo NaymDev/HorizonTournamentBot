@@ -111,7 +111,7 @@ class RegisterCog(commands.Cog):
                 )
                 await interaction.followup.send(f"✅ Successfully registered with Minecraft account `{ign}`!", ephemeral=True)
             except PlayerNotFound:
-                await interaction.followup.send(f"🤔 Hmm. I don't know you, sorry. Try and say `/hello` in <#{CONFIG.register.hello_channel_id}> first.", ephemeral=True)
+                await interaction.followup.send(f"THIS **SHOULDN'T** HAPPEN! Please report this! \n🤔 Hmm. I don't know you, sorry. Try and say `/hello` in <#{CONFIG.register.hello_channel_id}> first.", ephemeral=True)
             except MinecraftAccountNotFound as e:
                 await interaction.followup.send(f"❌ The username `{e.username}` does not exist. Please check the spelling and try again.", ephemeral=True)
             except NoDiscordTagOnHypixel:
