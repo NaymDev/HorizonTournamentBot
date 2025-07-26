@@ -30,5 +30,8 @@
     "challonge": {
         "_placeholder":0
     },
+    "styles": {
+        "pr_enter_emoji": "<:pr_enter:1370057653606154260>"
+    },
     "version": "b0.1"
 }

@@ -28,3 +28,11 @@ class TournamentRepository:
         await self.session.commit()
         await self.session.refresh(tournament)
         return tournament
+    
+    async def set_status(self, tournament_id: str, status: models.TournamentStatus) -> None:
+        tournament = await self.get_tournament_by_id(tournament_id)
+        if tournament:
+            tournament.status = status
+            await self.session.commit()
+        else:
+            raise ValueError(f"Tournament with id {tournament_id} not found.")

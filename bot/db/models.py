@@ -49,6 +49,8 @@ class Tournaments(Base):
     status = Column(Enum(TournamentStatus), default=TournamentStatus.planned)
     
     signup_channel_id = Column(String, nullable=False, unique=True)
+    game_texts_category_id = Column(String, nullable=False)
+    game_vc_category_id = Column(String, nullable=False)
     
     signups_locked_reason = Column(String, nullable=True)
     

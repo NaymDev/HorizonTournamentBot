@@ -5,6 +5,7 @@ from discord import app_commands
 import datetime
 import logging
 
+from db import models
 from challonge.client import ChallongeClient
 from config import CONFIG
 from db.session import SessionLocal
@@ -78,6 +79,32 @@ class TournamentCog(commands.Cog):
             logger.exception("Unexpected error during tournament creation")
             await interaction.followup.send(content="❌ Unexpected error while creating the tournament.", ephemeral=True)
             raise e
+    
+    async def tournament_autocomplete(self, interaction: discord.Interaction, current: str):
+        async with self.session_factory() as session:
+            tournament_repo = TournamentRepository(session)
+            tournaments = await tournament_repo.get_all_tournaments()
+            if tournaments is None:
+                return []
+                
+        filtered_tournaments: list[models.Tournaments] = [tournament for tournament in tournaments if current.lower() in tournament.name.lower()]
+        limited_tournaments: list[models.Tournaments] = filtered_tournaments[:25]
+
+        return [
+            discord.app_commands.Choice(name=tournament.name, value=str(tournament.id))
+            for tournament in limited_tournaments
+        ]
+        
+    @app_commands.command(name="start_tournament", description="Start a tournament (Admin only)")
+    @app_commands.default_permissions(administrator=True)
+    @discord.app_commands.autocomplete(tournament=tournament_autocomplete)
+    async def start_tournament(self, interaction: discord.Interaction, tournament: str):
+        interaction.response.defer(thinking=True, ephemeral=True)
+        tournament_id = tournament
+        async with self.session_factory() as session:
+            tournament_repo = TournamentRepository(session)
+            tournament_repo.set_status(tournament_id, models.TournamentStatus.active)
+        interaction.followup.send(content="✅ Tournament started successfully! (Signups now are closed!)", ephemeral=True)
 
 async def setup(bot: commands.Bot):
     if CONFIG.challonge.api_key is None:

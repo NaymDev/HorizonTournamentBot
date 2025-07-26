@@ -27,6 +27,9 @@ class ChallongeConfig(BaseConfig):
     _placeholder: int = ConfigField(readonly=True) # The sub config (ChallongeConfig) will be None without this
     api_key: str = ConfigField(sensitive=True, env_var="CHALLONGE_API_KEY", readonly=True)
 
+class StyleConfig(BaseConfig):
+    pr_enter_emoji: str = ConfigField(readonly=True)
+
 class HorizonBotConfig(BaseConfig):
     database: DBConfig = ConfigField()
     signups: SignupConfig = ConfigField()
@@ -34,6 +37,7 @@ class HorizonBotConfig(BaseConfig):
     register: RegisterConfig = ConfigField()
     hypixel: HypixelConfig = ConfigField()
     challonge: ChallongeConfig = ConfigField()
+    styles: StyleConfig = ConfigField()
     version: str = ConfigField(readonly=True)
 
 load_dotenv(dotenv_path=".env", override=True)

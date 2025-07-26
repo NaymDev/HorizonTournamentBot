@@ -148,7 +148,7 @@ class TeamManageCog(commands.Cog):
             
             embed = discord.Embed(
                 title=f"Team Information: {team.team_name}",
-                description="\n".join([f"<:pr_enter:1370057653606154260> `👤` <@{user_id}>" for user_id in members_discord_ids]),
+                description="\n".join([f"{CONFIG.styles.pr_enter_emoji} `👤` <@{user_id}>" for user_id in members_discord_ids]),
             ).set_footer(text=f"Status: {status_str}")
 
             if team.status in [models.TeamStatus.accepted, models.TeamStatus.substitute]:
