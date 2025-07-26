@@ -32,11 +32,6 @@ class SignupCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        signup_channel = await self.bot.fetch_channel(CONFIG.signups.signup_channel_id)
-        if signup_channel is None:
-            logger.error(f"Signup channel with ID {CONFIG.signups.signup_channel_id} not found.")
-            return
-        
         async with self.session_factory() as session:
             team_repo = TeamRepository(session)
             message_repo = MessageRepository(session)
